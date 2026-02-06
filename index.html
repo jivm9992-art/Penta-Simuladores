@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>VISION+ MAINFRAME V7.0 | TRAINING MASTER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        :root {
+            --term-bg: #000000;
+            --term-cyan: #00e5ff;
+            --term-green: #00ff41;
+            --term-white: #ffffff;
+            --term-yellow: #ffeb3b;
+            --term-red: #ff3333;
+        }
+        body {
+            background-color: #1a1a1a;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            color: var(--term-green);
+            user-select: none;
+        }
+        #terminal {
+            width: 1024px;
+            height: 700px;
+            background-color: var(--term-bg);
+            border: 2px solid #333;
+            padding: 15px;
+            position: relative;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-rows: 1fr 30px;
+        }
+        #screen-content {
+            white-space: pre;
+            font-size: 18px;
+            line-height: 1.2;
+            text-transform: uppercase;
+            color: var(--term-cyan);
+        }
+        .cyan { color: var(--term-cyan); }
+        .green { color: var(--term-green); }
+        .white { color: var(--term-white); font-weight: bold; text-shadow: 0 0 2px rgba(255,255,255,0.4); }
+        .yellow { color: var(--term-yellow); }
+        .red { color: var(--term-red); }
+        .bg-inv { background-color: var(--term-cyan); color: #000; padding: 0 2px; }
+        .cursor {
+            display: inline-block;
+            width: 11px; height: 18px;
+            background-color: var(--term-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        #trap { position: absolute; opacity: 0; top: 0; left: 0; }
+        .footer-bar {
+            border-top: 1px solid var(--term-cyan);
+            padding-top: 5px;
+            display: flex; justify-content: space-between;
+            font-size: 14px; color: var(--term-cyan);
+        }
+        .error-msg {
+            position: absolute;
+            bottom: 40px; left: 20px;
+            color: var(--term-red); font-weight: bold; background: #000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="terminal">
+    <textarea id="trap" autofocus></textarea>
+    <div id="screen-content"></div>
+    <div id="msg-box" class="error-msg"></div>
+    <div class="footer-bar">
+        <span>MVSM - CICS TS 5.1 | TERM: MPT1 | USER: HF6</span>
+        <span id="clock">12:00:00</span>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. DATA LAYER (PERFILES ROBUSTOS)
+    // ==========================================
+    const DB = {
+        'VICTORIA': {
+            key: 'VICTORIA', name: 'VICTORIA SANCHEZ C', acct: '0005063', org: '311 - BODEGA', status: 'A',
+            curr_bal: '844.71', min_pay: '147.01', limit: '2,500.00', avail: '1,655.29', due_date: '03/04/2026', cut: '10', block: 'NO',
+            info: { 
+                addr1: 'ISLOTE 225', addr2: 'SANTA EDUWIGES', city: 'GUADALAJARA', state: 'JAL', zip: '44580', 
+                home_phone: '3336318171', mobile: '3310102030', rfc: 'SAVC850624', email: 'VICTORIA@HOTMAIL.COM' 
+            },
+            billing: {type:'02', desc:'EMAIL'}, // 02 = Email
+            statements: [
+                {date:'10/03/2026', bal:'844.71', min:'147.01', cut:'10'}, 
+                {date:'10/02/2026', bal:'950.00', min:'200.00', cut:'10'},
+                {date:'10/01/2026', bal:'1,200.00', min:'250.00', cut:'10'}
+            ],
+            hist: { open_date: '28/09/2014', last_pmt: '05/03/2019', last_pur: '06/01/2019', fat_past1: '5,930.24', fat_past2: '5,324.01', fat_act: '4,683.31', score: '667', bucket_1: '0', bucket_2: '0', bucket_3: '0', profile: '111111111111' },
+            memos: [{date:'01/01/24', time:'10:00', user:'SYS', msg:'CUENTA APERTURADA'}],
+            related: [{org:'320', brand:'PROMODA', acct:'0004567', refKey:'PEDRO'}],
+            cards: [{num:'4698 4900 0001', name:'VICTORIA SANCHEZ', block:'NO'}],
+            insurance: [],
+            auths: [{date:'18/07', amt:'282.80', resp:'APPR', rsn:'REGULAR PURCHASE'}]
+        },
+        'JUAN': {
+            key: 'JUAN', name: 'JUAN PEREZ LOPEZ', acct: '0001234', org: '310 - SUBURBIA', status: 'D (DELINQ)',
+            curr_bal: '12,500.00', min_pay: '12,500.00', limit: '10,000.00', avail: '0.00', due_date: '15/02/2026', cut: '20', block: 'L (LATE)',
+            info: { addr1: 'CRISANTEMO 8A', addr2: 'LAS FLORES', city: 'GUADALAJARA', state: 'JAL', zip: '44100', home_phone: '3331112222', mobile: '5544332211', rfc: 'PELJ800101', email: 'JUAN@GMAIL.COM' },
+            billing: {type:'00', desc:'MAIL'}, // 00 = Papel
+            statements: [{date:'20/03/2026', bal:'12,500.00', min:'12,500.00', cut:'20'}],
+            hist: { open_date: '10/01/2018', last_pmt: '10/12/2025', last_pur: '15/01/2026', fat_past1: '12,000.00', fat_past2: '0.00', fat_act: '500.00', score: '420', bucket_1: '14', bucket_2: '30', bucket_3: '0', profile: '222111111111' },
+            memos: [{date:'10/01/24', time:'14:30', user:'HF6', msg:'PROMESA DE PAGO'}],
+            related: [{org:'311', brand:'BODEGA', acct:'0005063', refKey:'VICTORIA'}],
+            cards: [{num:'5500 0000 1234', name:'JUAN PEREZ', block:'L'}],
+            insurance: [{type:'VIDA', status:'ACTIVO', date:'10/01/20'}],
+            auths: []
+        },
+        'MARIA': { 
+            key: 'MARIA', name: 'MARIA GONZALEZ R', acct: '0009999', org: '311 - BODEGA', status: 'B (BLOCKED)', 
+            curr_bal: '0.00', min_pay: '0.00', limit: '5,000.00', avail: '0.00', due_date: '01/02/2026', cut: '05', block: 'J (STOLEN)',
+            info: { addr1: 'AV VALLARTA 200', addr2: 'CENTRO', city: 'CDMX', state: 'DIF', zip: '01000', home_phone: '5551234567', mobile: '5559876543', rfc: 'GORM900505', email: 'MARIA@OUTLOOK.COM' },
+            billing: {type:'00', desc:'MAIL'},
+            statements: [],
+            hist: { open_date: '01/05/2019', last_pmt: '01/02/2026', last_pur: '29/01/2026', fat_past1: '2,000.00', fat_past2: '0.00', fat_act: '1,200.00', score: '600', bucket_1: '0', bucket_2: '0', bucket_3: '0', profile: '111111111111' },
+            memos: [], related: [], cards:[{num:'4100 1111 2222', name:'MARIA GONZALEZ', block:'J (STOLEN)'}], insurance:[], 
+            auths:[{date:'29/01', amt:'1,200.00', resp:'DECL', rsn:'STOLEN CARD'}] 
+        },
+        'PEDRO': { 
+            key: 'PEDRO', name: 'PEDRO RAMIREZ S', acct: '0004567', org: '320 - PROMODA', status: 'A', 
+            curr_bal: '3,200.50', min_pay: '450.00', limit: '8,000.00', avail: '4,799.50', due_date: '10/02/2026', cut: '15', block: 'NO', 
+            info:{ addr1: 'AV SIEMPRE VIVA', addr2: 'SPR', city: 'MONTERREY', state: 'NL', zip: '64000', home_phone:'8110000000', mobile:'8112223333', rfc:'RASP900101', email:'PEDRO@GMAIL.COM'},
+            billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] 
+        },
+        'LUCIA': { 
+            key: 'LUCIA', name: 'LUCIA MENDEZ T', acct: '0008888', org: '311 - BODEGA', status: 'A', curr_bal: '100.00', min_pay: '0.00', limit: '15,000.00', avail: '14,900.00', due_date: '20/02/2026', cut: '02', block: 'NO', info:{}, billing:{type:'02', desc:'EMAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
+        'ROBERTO': { key: 'ROBERTO', name: 'ROBERTO GOMEZ B', acct: '0007777', org: '350 - SHASA', status: 'A', curr_bal: '4,900.00', min_pay: '600.00', limit: '5,000.00', avail: '100.00', due_date: '25/02/2026', cut: '05', block: 'NO', info:{}, billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
+        
+        'ANA': { key: 'ANA', name: 'ANA TORRES L', acct: '0006666', org: '310 - SUBURBIA', status: 'Z (LEGAL)', curr_bal: '25,000.00', min_pay: '25,000.00', limit: '10,000.00', avail: '0.00', due_date: '01/01/2026', cut: '30', block: 'Z (LEGAL)', info:{}, billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
+        'CARLOS': { key: 'CARLOS', name: 'CARLOS RUIZ Z', acct: '0005555', org: '340 - C&A', status: 'A', curr_bal: '0.00', min_pay: '0.00', limit: '20,000.00', avail: '20,000.00', due_date: '14/02/2026', cut: '25', block: 'NO', info:{}, billing:{type:'02', desc:'EMAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
+    
+        'SOFIA': { key: 'SOFIA', name: 'SOFIA VERGARA P', acct: '0004444', org: '311 - BODEGA', status: 'F (FRAUD)', curr_bal: '15,600.00', min_pay: '1,500.00', limit: '15,000.00', avail: '0.00', due_date: '05/02/2026', cut: '15', block: 'F (FRAUD)', info:{}, billing:{type:'02', desc:'EMAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
+        'MIGUEL': { key: 'MIGUEL', name: 'MIGUEL ANGEL H', acct: '0003333', org: '310 - SUBURBIA', status: 'A', curr_bal: '200.00', min_pay: '50.00', limit: '3,000.00', avail: '2,800.00', due_date: '28/02/2026', cut: '10', block: 'NO', info:{}, billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] 
+    }
+    };
+
+    // ==========================================
+    // 2. STATE MANAGEMENT
+    // ==========================================
+    let state = {
+        screen: 'LOGIN',     
+        subScreen: '',       
+        buffer: '',          
+        cursorPos: 'TOP',    
+        userActivated: false,
+        client: null,        
+        msg: '',
+        rowIndex: 0,         
+        tempData: { action: '', note: '' },
+        page: 1,
+        selectedStmt: null // Para guardar el estado de cuenta seleccionado en ARSD
+    };
+
+    // ==========================================
+    // 3. RENDER ENGINE
+    // ==========================================
+    const render = () => {
+        const display = document.getElementById('screen-content');
+        document.getElementById('msg-box').innerText = state.msg;
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', {hour12:false});
+
+        let html = '';
+        // Fallback robusto para evitar "undefined"
+        const cl = state.client || { org:'000', acct:'0000000', name:'NO CLIENT', cards:[], billing:{type:'00'}, insurance:[], auths:[], related:[], memos:[], hist:{}, info:{}, statements:[] };
+        const h = cl.hist || {};
+        const inf = cl.info || { addr1:'UNKNOWN', addr2:'', city:'', state:'', zip:'00000', home_phone:'0000000000', mobile:'0000000000', rfc:'XXXX000000', email:'NO@MAIL.COM' };
+        const commonHeader = `
+<div class="row"><span class="bg-inv">${state.subScreen || 'MENU'}</span> ( <span class="white">${state.cursorPos==='TOP'?state.buffer:''}</span>${state.cursorPos==='TOP'?'<span class="cursor"></span>':''} )            <span class="cyan">IBI SERVICES MEXICO " MPT1 "    PAGE 0${state.page}</span></div>
+<div class="row">1 <span class="cyan">ORG</span> ${cl.org.substring(0,3)}          0 <span class="cyan">ACCT</span> ${cl.acct}          000   <span class="cyan">REL</span>       <span class="cyan">PLANS</span>  4</div>`;
+        
+        // ------------------ PANTALLAS BASE ------------------
+        if (state.screen === 'LOGIN') {
+            html = `<br><br><div class="green">Ambiente de producao BRADESCARD / MEXICO Nucleo Alphaville</div><br><div class="green">APLICACAO: <span class="white">${state.buffer}</span><span class="cursor"></span></div><br><br><br><div class="cyan">Instrucción: Digite CICSMPT1 y de ENTER.</div>`;
+        } 
+        else if (state.screen === 'SIGNON') {
+            html = `<div class="cyan">WELCOME TO CICS TS 5.1</div><br><div class="green">Type your userid and password, then press ENTER:</div><br><div class="green"> Userid . . . . <span class="white">${state.cursorPos==='USER'?state.buffer:'M0000JXD'}</span>${state.cursorPos==='USER'?'<span class="cursor"></span>':''}</div><div class="green"> Password . . . <span class="white">${state.cursorPos==='PASS'?'*'.repeat(state.buffer.length):''}</span>${state.cursorPos==='PASS'?'<span class="cursor"></span>':''}</div><br><br><div class="yellow">Tips: User M0000JXD / Pass BRADES1</div>`;
+        }
+        else if (state.screen === 'ASRS') {
+            html = `<div class="row"><span class="bg-inv">ASRS</span> ( <span class="white">${state.cursorPos==='TOP'?state.buffer:''}</span>${state.cursorPos==='TOP'?'<span class="cursor"></span>':''} )            <span class="cyan">IBI SERVICES MEXICO " MPT1 "    PAGE 01</span></div><div class="cyan" style="text-align:center">ASM STATUS SETTING</div><br><div class="green">ACCT SUPPORT REP      HF6 - TRAINEE</div><br><div class="yellow">1 CURRENT STATUS       (<span class="white">${state.cursorPos==='BODY'?state.buffer:(state.userActivated?'A':'')}</span>${state.cursorPos==='BODY'?'<span class="cursor"></span>':''})</div><br><div class="green">      A - ACTIVE      B - ON BREAK</div>`;
+        }
+        else if (state.screen === 'MENU') {
+            html = `
+<div class="row"><span class="bg-inv">ASMU</span> ( <span class="white">${state.buffer}</span><span class="cursor"></span> )            <span class="cyan">IBI SERVICES MEXICO " MPT1 "    PAGE 01</span></div>
+<div class="cyan" style="text-align:center">PROCESSING MENU</div><br>
+<div class="green"> 1. ASMW - ACCOUNT WORK           9. ARQB - BILLING METHOD</div>
+<div class="green"> 2. ARSD - STATEMENT DISPLAY     10. ASRS - ACCT REP STATUS</div>
+<div class="green"> 3. ARIQ - ACCOUNT INQUIRY       11. ARDQ - INSURANCE INQ</div>
+<div class="green"> 4. ASHI - CONTACT HISTORY       13. ARQE - ACCOUNT EMBOSSING</div>
+<div class="green"> 5. ARTD - TRANS DISPLAY         14. ARTI - INSTALLMENT BILL</div>
+<div class="green"> 6. ARNL - NAME LOCATE           15. ARIC - RELATED ACCOUNTS</div>
+<div class="green"> 7. ARXQ - AGREEMENT HISTORY     16. OFAA - AUTH DECLINES</div>
+<div class="green"> 8. ARQN - OWNER INFORMATION</div>
+<br><div class="white">SELECCIONA CÓDIGO DE 4 LETRAS (EJ: ARIQ, ARNL)</div>`;
+        }
+        // ------------------ PANTALLAS APLICATIVO ------------------
+        else if (state.screen === 'APP') {
+            
+            // === ARSD (Estados de Cuenta) - CORREGIDO ===
+            if (state.subScreen === 'ARSD') {
+                if (state.page === 1) { // LISTA
+                    const rows = (cl.statements && cl.statements.length > 0) 
+                        ? cl.statements.map((s, idx) => {
+                            const isSelected = state.cursorPos === 'STMT_LIST' && state.rowIndex === idx;
+                            const marker = isSelected ? (state.buffer || '_') : ' '; 
+                            const cursorHtml = isSelected ? '<span class="cursor"></span>' : '';
+                            return `<div class="row"> (<span class="white">${marker}</span>${cursorHtml}) ${s.date}   ( ) 10/01/2025   ( ) 10/12/2024</div>`;
+                        }).join('') 
+                        : '<div class="row yellow">NO STATEMENTS AVAILABLE</div>';
+                    html = `${commonHeader}
+<div class="cyan" style="text-align:center">ON-LINE STATEMENT HISTORY</div><br>
+<div class="white">PLACE AN "X" BEFORE THE DATE OF THE STATEMENT</div>
+<br>${rows}<br><br><div class="white">(X) Seleccionar fecha y presionar ENTER</div>
+<br><div class="cyan footer-nav">PF1=MENU  PF3=ARIQ</div>`;
+                } else { // DETALLE (PAGE 02)
+                    const stmt = state.selectedStmt || {date:'00/00/0000', bal:'.00', min:'.00', cut:'00'};
+                    html = `${commonHeader}
+<div class="cyan" style="text-align:center">STATEMENT SUMMARY</div><br>
+<div class="row">1 DATE THIS STMT  <span class="white">${stmt.date}</span>    BILLING CYCLE  ${stmt.cut}</div>
+<div class="row">2 DATE LAST STMT  10/02/2026</div>
+<div class="row">3 CYC/DATE DUE    ${cl.due_date}</div><br>
+<div class="row">4 CREDIT LIMIT    ${cl.limit}      <span class="cyan">6 TOTAL PMT DUE</span>  <span class="white">${stmt.min}</span></div>
+<div class="row">5 OPEN-TO-BUY     ${cl.avail}      <span class="cyan">7 END BAL</span>        <span class="white">${stmt.bal}</span></div>
+<br><div class="cyan footer-nav">PF1=MENU  PF3=BACK (ARSD LIST)</div>`;
+                }
+            }
+
+            // === ARQB (Billing Method) - CORREGIDO ===
+            else if (state.subScreen === 'ARQB') {
+                html = `${commonHeader}
+<div class="cyan" style="text-align:center">ACCOUNT BASE SEGMENT (BILLING)</div><br>
+<div class="row">   <span class="cyan">BILLING CYCLE:</span> ${cl.cut}   <span class="cyan">NEXT STMT:</span> 15/03/2026</div>
+<br>
+<div class="row yellow">  *** DELIVERY METHOD CONFIGURATION ***</div>
+<br>
+<div class="row">  <span class="cyan">RETURN MAIL IND:</span> <span class="white">${cl.billing.type}</span></div>
+<div class="row">  <span class="cyan">DESCRIPTION:</span>     <span class="green">${cl.billing.type === '02' ? 'DIGITAL' : 'PHYSICAL'}</span></div>
+<br><br>
+<div class="cyan">  00 = PAPER MAIL</div>
+<div class="cyan">  02 = EMAIL STATEMENT</div>
+<br><div class="cyan footer-nav">PF1=MENU  PF3=ARIQ</div>`;
+            }
+
+            // === ARNL (Búsqueda) - RESETEABLE ===
+            else if (state.subScreen === 'ARNL') {
+                if (state.page === 0) {
+                    html = `
+<div class="row"><span class="bg-inv">ARNL</span> ( <span class="white">${state.cursorPos==='TOP'?state.buffer:''}</span>${state.cursorPos==='TOP'?'<span class="cursor"></span>':''} )            <span class="cyan">PAGE 00</span></div>
+<div class="cyan" style="text-align:center">NAME LOCATE</div><br>
+<div class="cyan">LAST NAME . . . <span class="white">${state.cursorPos==='BODY'?state.buffer:''}</span>${state.cursorPos==='BODY'?'<span class="cursor"></span>':''}</div>
+<div class="cyan">KEY TYPE  . . . 1  (0=PERSONAL, 1=BUSINESS)</div>
+<br><div class="white">INGRESE NOMBRE (EJ: VICTORIA) Y PRESIONE ENTER</div>`;
+                } else {
+                    html = `
+<div class="row"><span class="bg-inv">ARNL</span> ( )            <span class="cyan">PAGE 01</span></div>
+<div class="cyan">NAME LOCATE LIST</div><br>
+<div class="cyan">3 SELECT CODE   4 NAME FIELD</div>
+<div class="row">(<span class="white">${state.cursorPos==='BODY'?state.buffer:''}</span>${state.cursorPos==='BODY'?'<span class="cursor"></span>':''}) 01      ${state.client ? state.client.name : 'NO MATCH'}</div>
+<br><div class="white">ESCRIBE 'X' PARA SELECCIONAR</div>`;
+                }
+            }
+
+            // === ARQN (Info Cliente) ===
+            else if (state.subScreen === 'ARQN') {
+                html = `${commonHeader}
+<div class="cyan" style="text-align:center">OWNER INFORMATION</div><br>
+<div class="row">1 CUST NBR  000000000000035   STATUS 0   VIP 0</div><br>
+<div class="row">2 NAME      <span class="white">${cl.name}</span></div>
+<div class="row">3 ADDR      <span class="white">${inf.addr1}</span></div>
+<div class="row">4 ADDR 2    <span class="white">${inf.addr2}</span></div>
+<div class="row">5 CITY      <span class="white">${inf.city}</span></div>
+<div class="row">6 STATE     <span class="white">${inf.state}</span>   7 POSTAL  <span class="white">${inf.zip}</span></div><br>
+<div class="row">9 HOME PHONE <span class="white">${inf.home_phone}</span></div>
+<div class="row">10 MOBILE    <span class="white">${inf.mobile}</span></div>
+<div class="row">  RFC       <span class="white">${inf.rfc}</span>   EMAIL  <span class="white">${inf.email}</span></div>
+<br><div class="cyan footer-nav">PF1=MENU  PF3=ARIQ</div>`;
+            }
+
+            // === ARIQ (Multi-Página) ===
+            else if (state.subScreen === 'ARIQ') {
+                let body = '';
+                if (state.page === 1) {
+                    body = `<div class="row">2 <span class="cyan">SHORT NAME</span> <span class="white">${cl.name}</span>   <span class="cyan">ST/PR</span> 225 8 <span class="cyan">STAT</span> ${cl.status}</div><div class="row">  <span class="cyan">CURR BAL</span>                     <span class="white">${cl.curr_bal}</span>   9 <span class="cyan">MEMO:BAL</span>             <span class="white">${cl.curr_bal}</span></div><div class="row">3 <span class="cyan">TOT AMT DUE</span>                   <span class="white">${cl.min_pay}</span>   10 <span class="cyan">PMT DUE DATE</span>      <span class="white">${cl.due_date}</span></div><div class="row">4 <span class="cyan">TOT CR LMT</span>                 <span class="white">${cl.limit}</span>   <span class="cyan">CR LIMIT DT</span>         13/08/2025</div><div class="row">5 <span class="cyan">CASH AVAIL</span>                 <span class="white">${cl.avail}</span>    11 <span class="cyan">BILL CYCLE</span>        ${cl.cut}</div><div class="row">8 <span class="cyan">BLOCK CODE</span>                 <span class="red">${cl.block}</span></div>`;
+                } else if (state.page === 2) {
+                    body = `<div class="row"><span class="cyan">USER CODES:</span>               <span class="cyan">USER DATES:</span>           <span class="cyan">USER AMOUNTS:</span></div><div class="row"><span class="cyan">USER 1</span>                     <span class="cyan">DT ALT PCT</span> 05/07/2017   <span class="cyan">SALDO TOT</span>    <span class="white">${cl.curr_bal}</span></div><div class="row"><span class="cyan">TIPO CLI</span>  01              <span class="cyan">CHGOFF TSY</span>              <span class="cyan">2 ULT ESTADO</span>   <span class="white">${cl.min_pay}</span></div><div class="row"><span class="cyan">3 FAT PAST2</span>    <span class="white">${h.fat_past2}</span></div><div class="row"><span class="cyan">4 FAT PAST1</span>    <span class="white">${h.fat_past1}</span></div><div class="row"><span class="cyan">5 FAT ACTUAL</span>   <span class="white">${h.fat_act}</span></div>`;
+                } else if (state.page === 4) {
+                    body = `<div class="row">1 <span class="cyan">DATE OPENED</span>              <span class="white">${h.open_date}</span>   <span class="cyan">DATE CLOSED</span>         --/--/----</div><div class="row">2 <span class="cyan">DATE LAST PMT</span>            <span class="white">${h.last_pmt}</span></div><div class="row">3 <span class="cyan">DATE LAST PUR</span>            <span class="white">${h.last_pur}</span></div>`;
+                } else if (state.page === 5) {
+                    body = `<div class="row">1 <span class="cyan">DELQ DAYS CTA</span>            ${h.bucket_1}              <span class="cyan">DELINQUENCY AMOUNT</span></div><div class="row">2 <span class="cyan">24 MONTH PROFILE</span></div><div class="row">  ( 01-06 ) <span class="white">${h.profile ? h.profile.substring(0,6) : '000000'}</span></div><div class="row">  ( 07-12 ) <span class="white">${h.profile ? h.profile.substring(6,12) : '000000'}</span></div><div class="row">  <span class="cyan">APP SCR</span> ${h.score}</div>`;
+                }
+                html = `${commonHeader}<div class="cyan" style="text-align:center">ACCOUNT INQUIRY</div>${body}<br><div class="cyan footer-nav">PF1=MENU  PF3=BACK  (ENTER) NEXT PAGE</div>`;
+            }
+
+            // === OTROS MODULOS (Sin cambios mayores) ===
+            else if (state.subScreen === 'ASMW') { const act = state.cursorPos==='ACTION' ? state.buffer : state.tempData.action; const note = state.cursorPos==='NOTE' ? state.buffer : state.tempData.note;
+                html = `${commonHeader}<div class="cyan" style="text-align:center">ACCOUNT WORK</div><br><div class="row">1 ACTION CODE</div><div class="row">  ( <span class="white">${act}</span>${state.cursorPos==='ACTION'?'<span class="cursor"></span>':''} )  <span class="cyan">EJ: IMPE</span></div><br><div class="row">1 NOTE (5-60 CHARS)</div><div class="row">  ( <span class="white">${note}</span>${state.cursorPos==='NOTE'?'<span class="cursor"></span>':''} )</div><br><br><div class="white">STATUS: ${state.msg || 'READY FOR INPUT'}</div>`; }
+            else if (state.subScreen === 'ASHI') { let rows = cl.memos.length ? cl.memos.map(m => `<div class="row white">${m.date} ${m.time}  USER:${m.user}  ACT:${m.action}</div><div class="row green">  ${m.msg}</div><br>`).join('') : `<div class="row yellow">  NO CONTACT HISTORY AVAILABLE</div>`;
+                html = `${commonHeader}<div class="cyan" style="text-align:center">CONTACT HISTORY</div><br>${rows}`; }
+            else if (state.subScreen === 'ARIC') { let rows = cl.related.length ? cl.related.map((r, idx) => { const isSelected = state.cursorPos === 'ROW_X' && state.rowIndex === idx; const marker = isSelected ? (state.buffer || '_') : ' '; const cursorHtml = isSelected ? '<span class="cursor"></span>' : ''; return `<div class="row"> (<span class="white">${marker}</span>${cursorHtml})  <span class="white">${r.org}</span>   <span class="white">${r.brand}</span>   <span class="white">${r.acct}</span></div>`; }).join('') : `<div class="row yellow">  NO RELATED ACCOUNTS FOUND</div>`;
+                html = `${commonHeader}<div class="cyan" style="text-align:center">CUSTOMER RELATED ACCOUNTS</div><br><div class="row cyan"> SEL  ORG   BRAND        ACCOUNT</div><div class="row"> ( )  <span class="white">${cl.org.substring(0,3)}</span>   CURRENT      ${cl.acct}</div>${rows}<br><div class="white">USE (X) TO SELECT ACCOUNT</div>`;
+            }
+            else if (state.subScreen === 'ARTD') { html = `${commonHeader}<div class="cyan">TRANSACCIONES (SIMULADO)</div><br><div class="row white">30/10  1103  67.54 D822  INC PROMOCION</div>`; }
+            else if (state.subScreen === 'ARQE') { html = `${commonHeader}<div class="cyan">EMBOSSING</div><br><div class="row">CARD: ${cl.cards[0] ? cl.cards[0].num : 'NONE'}</div><div class="row">BLOCK: ${cl.cards[0] ? cl.cards[0].block : ''}</div>`; }
+            else if (state.subScreen === 'OFAA') { let rows = cl.auths.length ? cl.auths.map(a => `<div class="row red">${a.date}  ${a.amt}  ${a.resp}  ${a.rsn}</div>`).join('') : '<div class="row green">NO RECENT DECLINES</div>';
+                html = `${commonHeader}<div class="cyan">AUTHS</div><br>${rows}`; }
+            else if (state.subScreen === 'ARDQ') { let rows = cl.insurance.length ? cl.insurance.map(i => `<div class="row white">${i.type} - ${i.status}</div>`).join('') : '<div class="row yellow">NO INSURANCE</div>'; html = `${commonHeader}<div class="cyan">INSURANCE</div><br>${rows}`;
+            }
+            else { html = `${commonHeader}<div class="row green">PANTALLA ${state.subScreen} ACTIVA (SIMULADA)</div>`; }
+        }
+
+        display.innerHTML = html;
+        document.getElementById('trap').focus();
+    };
+
+    // ==========================================
+    // 4. CONTROLLER (LOGIC)
+    // ==========================================
+    const processCommand = () => {
+        const cmd = state.buffer.toUpperCase().trim();
+        state.msg = '';
+
+        if (state.screen === 'LOGIN') { if (cmd === 'CICSMPT1') { state.screen = 'SIGNON'; state.cursorPos = 'USER';
+        } else state.msg = 'INVALID TRANSACTION ID'; }
+        else if (state.screen === 'SIGNON') { if (state.cursorPos === 'USER') state.cursorPos = 'PASS';
+        else if (state.cursorPos === 'PASS') { if (cmd === 'BRADES1') { state.screen = 'ASRS'; state.cursorPos = 'TOP';
+        } else state.msg = 'INVALID PASSWORD'; } }
+        else if (state.screen === 'ASRS') { if (state.cursorPos === 'TOP' && cmd === '') state.cursorPos = 'BODY';
+        else if (state.cursorPos === 'BODY') { if (cmd === 'A') { state.userActivated = true; state.screen = 'MENU'; state.cursorPos = 'TOP';
+        state.msg = 'USER ACTIVATED'; } else state.msg = 'ENTER "A" TO ACTIVATE'; } }
+        else if (state.cursorPos === 'TOP') {
+            const map = { 
+                'ARIQ':'ARIQ', 'ARTD':'ARTD', 'ARTI':'ARTI', 'ARNL':'ARNL', 
+                'ASMU':'MENU', 'MENU':'MENU', 'ASRS':'ASRS', 'ASMW':'ASMW', 'ASHI':'ASHI', 'ARPH':'ARPH',
+                'ARQB':'ARQB', 'ARDQ':'ARDQ', 'ARQE':'ARQE', 'ARIC':'ARIC', 'OFAA':'OFAA', 'ARSD':'ARSD', 'ARQN':'ARQN' 
+            };
+            if (map[cmd]) {
+                if (cmd === 'MENU' || cmd === 'ASMU') { state.screen = 'MENU'; }
+                else {
+                    if (cmd === 'ARNL') {
+                        state.screen = 'APP';
+                        state.subScreen = 'ARNL';
+                        state.page = 0;
+                        state.client = null;
+                        state.cursorPos = 'BODY';
+                    } else if (!state.client) { 
+                        state.msg = 'OPERATIONAL ERROR: NO CLIENT SELECTED (USE ARNL)';
+                    } else {
+                        state.screen = 'APP';
+                        state.subScreen = map[cmd]; state.tempData = { action: '', note: '' }; state.rowIndex = 0; state.page = 1;
+                        if (cmd === 'ASMW') state.cursorPos = 'ACTION';
+                        else if (cmd === 'ARIC' && state.client.related.length > 0) state.cursorPos = 'ROW_X';
+                        else if (cmd === 'ARSD') state.cursorPos = 'STMT_LIST'; 
+                    }
+                }
+            } else if (cmd === '') {
+                 if (state.subScreen === 'ARIQ') {
+                     if(state.page === 1) state.page = 2;
+                     else if(state.page === 2) state.page = 4; else if(state.page === 4) state.page = 5; else state.page = 1;
+                 }
+                 else if (state.subScreen === 'ARIC') { state.rowIndex++;
+                 if (state.rowIndex >= state.client.related.length) state.rowIndex = 0; }
+                 else if (state.subScreen === 'ARSD' && state.page === 1) { state.rowIndex++;
+                 if (state.rowIndex >= state.client.statements.length) state.rowIndex = 0; }
+            } else { state.msg = 'INVALID COMMAND'; }
+        }
+        
+        // --- LOGICA INTERNA DE PANTALLAS ---
+        else if (state.subScreen === 'ARNL') {
+            if (state.page === 0) { 
+                const foundKey = Object.keys(DB).find(k => cmd.includes(k));
+                if (foundKey) { 
+                    state.client = DB[foundKey];
+                    state.page = 1; 
+                    state.cursorPos = 'BODY';
+                } else state.msg = 'CLIENTE NO ENCONTRADO';
+            } else if (state.page === 1 && cmd === 'X') {
+                state.msg = `CLIENTE CARGADO OK`;
+                state.cursorPos = 'TOP'; 
+            }
+        }
+        else if (state.subScreen === 'ASMW') { if (state.cursorPos === 'ACTION') { state.tempData.action = cmd;
+        state.cursorPos = 'NOTE'; } else if (state.cursorPos === 'NOTE') { state.client.memos.unshift({ date: new Date().toLocaleDateString('en-GB'), time: new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit'}), user: 'TRAINEE', action: state.tempData.action, msg: cmd });
+        state.msg = 'COMMENT SAVED'; state.cursorPos = 'TOP'; } }
+        else if (state.subScreen === 'ARIC' && state.cursorPos === 'ROW_X') { if (cmd === 'X') { const target = state.client.related[state.rowIndex];
+        if (target && DB[target.refKey]) { state.client = DB[target.refKey]; state.msg = 'CONTEXT SWITCHED'; state.cursorPos = 'TOP'; } } }
+        
+        else if (state.subScreen === 'ARSD' && state.cursorPos === 'STMT_LIST') {
+            if (cmd === 'X') {
+                state.selectedStmt = state.client.statements[state.rowIndex];
+                state.page = 2; 
+                state.cursorPos = 'TOP';
+            }
+        }
+
+        state.buffer = '';
+        render();
+    };
+
+    document.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (key.startsWith('F') && key.length > 1) {
+            e.preventDefault();
+            if (key === 'F1') { state.screen = 'MENU'; state.cursorPos = 'TOP'; }
+            if (key === 'F3') { 
+                if (state.subScreen === 'ARSD' && state.page === 2) { state.page = 1; state.cursorPos = 'STMT_LIST'; } 
+                else state.cursorPos = 'TOP'; 
+            }
+            state.buffer = ''; render(); return;
+        }
+        if (key === 'Enter') processCommand();
+        else if (key === 'Backspace') { state.buffer = state.buffer.slice(0, -1); render(); }
+        else if (key.length === 1 && !e.ctrlKey) { state.buffer += key.toUpperCase(); render(); }
+        document.getElementById('trap').focus();
+    });
+    render();
+</script>
+</body>
+</html>
