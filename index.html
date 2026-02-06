@@ -2,431 +2,604 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>VISION+ MAINFRAME V7.0 | TRAINING MASTER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Afore Banamex - Pentafón</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         :root {
-            --term-bg: #000000;
-            --term-cyan: #00e5ff;
-            --term-green: #00ff41;
-            --term-white: #ffffff;
-            --term-yellow: #ffeb3b;
-            --term-red: #ff3333;
+            --bana-blue: #002D72;
+            --bana-red: #DA291C;
+            --bana-light-blue: #41B6E6;
+            --bg-color: #f4f6f9;
+            --text-color: #333;
+            --success-green: #7CFC00;
+            --warning-yellow: #fcd55b;
+            --alert-red: #ff6b6b;
+            --cyan-fin: #00bcd4;
+            --blue-dtt: #007bff;
         }
-        body {
-            background-color: #1a1a1a;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Share Tech Mono', monospace;
-            overflow: hidden;
-            color: var(--term-green);
-            user-select: none;
-        }
-        #terminal {
-            width: 1024px;
-            height: 700px;
-            background-color: var(--term-bg);
-            border: 2px solid #333;
-            padding: 15px;
-            position: relative;
-            box-sizing: border-box;
-            display: grid;
-            grid-template-rows: 1fr 30px;
-        }
-        #screen-content {
-            white-space: pre;
-            font-size: 18px;
-            line-height: 1.2;
-            text-transform: uppercase;
-            color: var(--term-cyan);
-        }
-        .cyan { color: var(--term-cyan); }
-        .green { color: var(--term-green); }
-        .white { color: var(--term-white); font-weight: bold; text-shadow: 0 0 2px rgba(255,255,255,0.4); }
-        .yellow { color: var(--term-yellow); }
-        .red { color: var(--term-red); }
-        .bg-inv { background-color: var(--term-cyan); color: #000; padding: 0 2px; }
-        .cursor {
-            display: inline-block;
-            width: 11px; height: 18px;
-            background-color: var(--term-green);
-            animation: blink 1s step-end infinite;
-            vertical-align: text-bottom;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
-        #trap { position: absolute; opacity: 0; top: 0; left: 0; }
-        .footer-bar {
-            border-top: 1px solid var(--term-cyan);
-            padding-top: 5px;
-            display: flex; justify-content: space-between;
-            font-size: 14px; color: var(--term-cyan);
-        }
-        .error-msg {
-            position: absolute;
-            bottom: 40px; left: 20px;
-            color: var(--term-red); font-weight: bold; background: #000;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-color); font-size: 14px; }
+        
+        /* LOGIN */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #002D72; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; width: 300px; }
+        .login-box img { width: 150px; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; text-align: center; box-sizing: border-box; }
+        .login-btn { background-color: var(--bana-red); color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .login-btn:hover { background-color: #b00020; }
+
+        /* HEADER */
+        header { background-color: white; border-bottom: 4px solid var(--bana-blue); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 5px;}
+        .logo-area img { height: 40px; width: auto; }
+        .agent-info { font-weight: bold; color: var(--bana-blue); margin-right: 15px; }
+
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 600px; }
+
+        .nav-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-nav { background: white; border: 1px solid var(--bana-blue); color: var(--bana-blue); padding: 8px 15px; font-size: 0.9rem; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .btn-nav:hover, .btn-nav.active { background-color: var(--bana-blue); color: white; }
+
+        .crm-title { text-align: center; font-size: 1.8rem; color: #000; font-family: 'Times New Roman', serif; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        
+        .interaction-step { background-color: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 5px; border-left: 5px solid transparent; display: none; animation: fadeIn 0.4s ease-in-out; }
+        .interaction-step.visible { display: block; border-left-color: var(--bana-blue); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .script-text { font-size: 1rem; line-height: 1.6; color: #212529; margin-bottom: 15px; }
+        .highlight { color: var(--bana-blue); font-weight: 700; }
+
+        .radio-group { margin-top: 10px; display: flex; gap: 20px; align-items: center; }
+        .radio-group label { font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        input[type="radio"] { accent-color: var(--bana-blue); transform: scale(1.2); }
+
+        .alert-box-red { background-color: var(--alert-red); color: white; padding: 20px; border-radius: 5px; margin: 15px 0; font-weight: bold; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); line-height: 1.5;}
+        .alert-box-yellow { background-color: var(--warning-yellow); color: #333; padding: 20px; border-radius: 8px; margin: 15px 0; font-weight: bold; text-align: center; border: 2px solid #e0c040; font-size: 0.95rem; line-height: 1.5; }
+
+        .validation-grid, .tipif-grid { display: grid; grid-template-columns: 200px 1fr; gap: 15px; align-items: center; background-color: #fff; padding: 20px; border: 1px solid #eee; margin-top: 15px; border-radius: 5px; }
+        .form-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
+        
+        label { font-weight: 600; color: #555; }
+        select, textarea, input[type="text"], input[type="date"], input[type="time"], input[type="number"] { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 100%; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; }
+        textarea { resize: vertical; height: 80px; }
+
+        .system-msg { padding: 15px; margin-top: 15px; border-radius: 4px; border: 1px solid #ddd; background-color: white; }
+        .msg-end { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .msg-info { background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
+        
+        .huellas-no-msg { background-color: #e8f4fd; border-left: 4px solid #17a2b8; padding: 20px; margin-top: 15px; }
+        .instruction-block { background-color: #fff; padding: 15px; border: 1px dashed #999; margin-top: 10px; font-size: 0.9rem; }
+
+        .btn-action { background-color: var(--bana-red); color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; margin-top: 15px; font-weight: bold; transition: background 0.2s; }
+        .btn-action:hover { background-color: #b00020; }
+        
+        .btn-save { background-color: var(--bana-blue); color: white; border: none; padding: 15px; border-radius: 4px; cursor: pointer; margin-top: 20px; font-weight: bold; font-size: 1.1rem; width: 100%; transition: background 0.2s; }
+        .btn-save:hover { background-color: #001f52; }
+
+        .btn-download { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-download:hover { background-color: #218838; }
+        
+        .agenda-panel { margin-top: 15px; padding: 15px; border: 1px solid #b2dba1; background-color: #dff0d8; border-radius: 5px; display: none; }
+
+        select option { font-weight: bold; }
+        .opt-full { background-color: var(--success-green); color: #000; } 
+        .opt-dtt { background-color: var(--blue-dtt); color: #fff; } 
+        .opt-fin { background-color: var(--cyan-fin); color: #fff; } 
+        .opt-red { background-color: var(--alert-red); color: #fff; } 
+        .opt-other { background-color: #FFFF00; color: #000; } 
+
     </style>
 </head>
 <body>
 
-<div id="terminal">
-    <textarea id="trap" autofocus></textarea>
-    <div id="screen-content"></div>
-    <div id="msg-box" class="error-msg"></div>
-    <div class="footer-bar">
-        <span>MVSM - CICS TS 5.1 | TERM: MPT1 | USER: HF6</span>
-        <span id="clock">12:00:00</span>
+<div id="login-overlay">
+    <div class="login-box">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Citibanamex_logo.svg/2560px-Citibanamex_logo.svg.png" alt="Citibanamex">
+        <h3 style="color:#002D72;">Acceso a CRM</h3>
+        <p>Ingresa tu número de empleado para iniciar turno.</p>
+        <input type="text" id="empleado-id" placeholder="No. de Empleado" autocomplete="off">
+        <button class="login-btn" onclick="iniciarSesion()">INGRESAR</button>
+        <p id="login-error" style="color:red; display:none; margin-top:10px;">Ingresa un número válido</p>
     </div>
 </div>
 
-<script>
-    // ==========================================
-    // 1. DATA LAYER (PERFILES ROBUSTOS)
-    // ==========================================
-    const DB = {
-        'VICTORIA': {
-            key: 'VICTORIA', name: 'VICTORIA SANCHEZ C', acct: '0005063', org: '311 - BODEGA', status: 'A',
-            curr_bal: '844.71', min_pay: '147.01', limit: '2,500.00', avail: '1,655.29', due_date: '03/04/2026', cut: '10', block: 'NO',
-            info: { 
-                addr1: 'ISLOTE 225', addr2: 'SANTA EDUWIGES', city: 'GUADALAJARA', state: 'JAL', zip: '44580', 
-                home_phone: '3336318171', mobile: '3310102030', rfc: 'SAVC850624', email: 'VICTORIA@HOTMAIL.COM' 
-            },
-            billing: {type:'02', desc:'EMAIL'}, // 02 = Email
-            statements: [
-                {date:'10/03/2026', bal:'844.71', min:'147.01', cut:'10'}, 
-                {date:'10/02/2026', bal:'950.00', min:'200.00', cut:'10'},
-                {date:'10/01/2026', bal:'1,200.00', min:'250.00', cut:'10'}
-            ],
-            hist: { open_date: '28/09/2014', last_pmt: '05/03/2019', last_pur: '06/01/2019', fat_past1: '5,930.24', fat_past2: '5,324.01', fat_act: '4,683.31', score: '667', bucket_1: '0', bucket_2: '0', bucket_3: '0', profile: '111111111111' },
-            memos: [{date:'01/01/24', time:'10:00', user:'SYS', msg:'CUENTA APERTURADA'}],
-            related: [{org:'320', brand:'PROMODA', acct:'0004567', refKey:'PEDRO'}],
-            cards: [{num:'4698 4900 0001', name:'VICTORIA SANCHEZ', block:'NO'}],
-            insurance: [],
-            auths: [{date:'18/07', amt:'282.80', resp:'APPR', rsn:'REGULAR PURCHASE'}]
-        },
-        'JUAN': {
-            key: 'JUAN', name: 'JUAN PEREZ LOPEZ', acct: '0001234', org: '310 - SUBURBIA', status: 'D (DELINQ)',
-            curr_bal: '12,500.00', min_pay: '12,500.00', limit: '10,000.00', avail: '0.00', due_date: '15/02/2026', cut: '20', block: 'L (LATE)',
-            info: { addr1: 'CRISANTEMO 8A', addr2: 'LAS FLORES', city: 'GUADALAJARA', state: 'JAL', zip: '44100', home_phone: '3331112222', mobile: '5544332211', rfc: 'PELJ800101', email: 'JUAN@GMAIL.COM' },
-            billing: {type:'00', desc:'MAIL'}, // 00 = Papel
-            statements: [{date:'20/03/2026', bal:'12,500.00', min:'12,500.00', cut:'20'}],
-            hist: { open_date: '10/01/2018', last_pmt: '10/12/2025', last_pur: '15/01/2026', fat_past1: '12,000.00', fat_past2: '0.00', fat_act: '500.00', score: '420', bucket_1: '14', bucket_2: '30', bucket_3: '0', profile: '222111111111' },
-            memos: [{date:'10/01/24', time:'14:30', user:'HF6', msg:'PROMESA DE PAGO'}],
-            related: [{org:'311', brand:'BODEGA', acct:'0005063', refKey:'VICTORIA'}],
-            cards: [{num:'5500 0000 1234', name:'JUAN PEREZ', block:'L'}],
-            insurance: [{type:'VIDA', status:'ACTIVO', date:'10/01/20'}],
-            auths: []
-        },
-        'MARIA': { 
-            key: 'MARIA', name: 'MARIA GONZALEZ R', acct: '0009999', org: '311 - BODEGA', status: 'B (BLOCKED)', 
-            curr_bal: '0.00', min_pay: '0.00', limit: '5,000.00', avail: '0.00', due_date: '01/02/2026', cut: '05', block: 'J (STOLEN)',
-            info: { addr1: 'AV VALLARTA 200', addr2: 'CENTRO', city: 'CDMX', state: 'DIF', zip: '01000', home_phone: '5551234567', mobile: '5559876543', rfc: 'GORM900505', email: 'MARIA@OUTLOOK.COM' },
-            billing: {type:'00', desc:'MAIL'},
-            statements: [],
-            hist: { open_date: '01/05/2019', last_pmt: '01/02/2026', last_pur: '29/01/2026', fat_past1: '2,000.00', fat_past2: '0.00', fat_act: '1,200.00', score: '600', bucket_1: '0', bucket_2: '0', bucket_3: '0', profile: '111111111111' },
-            memos: [], related: [], cards:[{num:'4100 1111 2222', name:'MARIA GONZALEZ', block:'J (STOLEN)'}], insurance:[], 
-            auths:[{date:'29/01', amt:'1,200.00', resp:'DECL', rsn:'STOLEN CARD'}] 
-        },
-        'PEDRO': { 
-            key: 'PEDRO', name: 'PEDRO RAMIREZ S', acct: '0004567', org: '320 - PROMODA', status: 'A', 
-            curr_bal: '3,200.50', min_pay: '450.00', limit: '8,000.00', avail: '4,799.50', due_date: '10/02/2026', cut: '15', block: 'NO', 
-            info:{ addr1: 'AV SIEMPRE VIVA', addr2: 'SPR', city: 'MONTERREY', state: 'NL', zip: '64000', home_phone:'8110000000', mobile:'8112223333', rfc:'RASP900101', email:'PEDRO@GMAIL.COM'},
-            billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] 
-        },
-        'LUCIA': { 
-            key: 'LUCIA', name: 'LUCIA MENDEZ T', acct: '0008888', org: '311 - BODEGA', status: 'A', curr_bal: '100.00', min_pay: '0.00', limit: '15,000.00', avail: '14,900.00', due_date: '20/02/2026', cut: '02', block: 'NO', info:{}, billing:{type:'02', desc:'EMAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
-        'ROBERTO': { key: 'ROBERTO', name: 'ROBERTO GOMEZ B', acct: '0007777', org: '350 - SHASA', status: 'A', curr_bal: '4,900.00', min_pay: '600.00', limit: '5,000.00', avail: '100.00', due_date: '25/02/2026', cut: '05', block: 'NO', info:{}, billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
-        
-        'ANA': { key: 'ANA', name: 'ANA TORRES L', acct: '0006666', org: '310 - SUBURBIA', status: 'Z (LEGAL)', curr_bal: '25,000.00', min_pay: '25,000.00', limit: '10,000.00', avail: '0.00', due_date: '01/01/2026', cut: '30', block: 'Z (LEGAL)', info:{}, billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
-        'CARLOS': { key: 'CARLOS', name: 'CARLOS RUIZ Z', acct: '0005555', org: '340 - C&A', status: 'A', curr_bal: '0.00', min_pay: '0.00', limit: '20,000.00', avail: '20,000.00', due_date: '14/02/2026', cut: '25', block: 'NO', info:{}, billing:{type:'02', desc:'EMAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
-    
-        'SOFIA': { key: 'SOFIA', name: 'SOFIA VERGARA P', acct: '0004444', org: '311 - BODEGA', status: 'F (FRAUD)', curr_bal: '15,600.00', min_pay: '1,500.00', limit: '15,000.00', avail: '0.00', due_date: '05/02/2026', cut: '15', block: 'F (FRAUD)', info:{}, billing:{type:'02', desc:'EMAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] },
-        'MIGUEL': { key: 'MIGUEL', name: 'MIGUEL ANGEL H', acct: '0003333', org: '310 - SUBURBIA', status: 'A', curr_bal: '200.00', min_pay: '50.00', limit: '3,000.00', avail: '2,800.00', due_date: '28/02/2026', cut: '10', block: 'NO', info:{}, billing:{type:'00', desc:'MAIL'}, statements:[], hist: {}, memos: [], related: [], cards:[], insurance:[], auths:[] 
-    }
-    };
+<div id="main-app" style="display:none;">
+    <header>
+        <div class="logo-area">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Citibanamex_logo.svg/2560px-Citibanamex_logo.svg.png" alt="Citibanamex">
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span class="agent-info" id="display-agente"></span>
+            <button class="btn-download" onclick="descargarExcel()">💾 Descargar Reporte</button>
+        </div>
+    </header>
 
-    // ==========================================
-    // 2. STATE MANAGEMENT
-    // ==========================================
-    let state = {
-        screen: 'LOGIN',     
-        subScreen: '',       
-        buffer: '',          
-        cursorPos: 'TOP',    
-        userActivated: false,
-        client: null,        
-        msg: '',
-        rowIndex: 0,         
-        tempData: { action: '', note: '' },
-        page: 1,
-        selectedStmt: null // Para guardar el estado de cuenta seleccionado en ARSD
-    };
+    <div class="container">
+        <div class="nav-buttons">
+            <button class="btn-nav active" onclick="cargarCRM('enrolamiento')">Enrolamiento</button>
+            <button class="btn-nav" onclick="cargarCRM('ppp-dep')">PPP Dependencia</button>
+            <button class="btn-nav" onclick="cargarCRM('ppt-trab')">PPT Trabajador</button>
+            <button class="btn-nav" onclick="cargarCRM('notiafo')">Notiafo</button>
+            <button class="btn-nav" onclick="cargarCRM('portal')">Portal Prospectos</button>
+            <button class="btn-nav" onclick="cargarCRM('info')">Info Retiro</button>
+            <button class="btn-nav" onclick="cargarCRM('digital')">Digital IN</button>
+            <button class="btn-nav" onclick="cargarCRM('confin')">Confirmación IN</button>
+            <button class="btn-nav" onclick="cargarCRM('confout')">Confirmación OUT</button>
+            <button class="btn-nav" onclick="cargarCRM('folio')">Folio</button>
+        </div>
 
-    // ==========================================
-    // 3. RENDER ENGINE
-    // ==========================================
-    const render = () => {
-        const display = document.getElementById('screen-content');
-        document.getElementById('msg-box').innerText = state.msg;
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-US', {hour12:false});
+        <div id="crm-enrolamiento" class="crm-content">
+            <h2 class="crm-title">ENROLAMIENTO</h2>
+            <div id="enr-step1" class="interaction-step visible">
+                <div class="script-text">Buenos D/T/N mi nombre es de <span class="highlight">AFORE BANAMEX</span>, ¿Tengo el gusto con el/la Sr./Srita. Por favor?</div>
+                <div class="radio-group"><label><input type="radio" name="enr_r1" onclick="nextStepEnr(1, true)"> Sí</label><label><input type="radio" name="enr_r1" onclick="nextStepEnr(1, false)"> No</label></div>
+                <div id="enr-msg-1-no" class="system-msg msg-info" style="display:none; background-color: #f8f9fa; border:1px solid #ddd; color:#333;">Una disculpa por las molestias, agradezco haya tomado la llamada, que siga pasando un excelente día/tarde/noche. Mi nombre es () de <strong>AFORE BANAMEX</strong>, hasta luego.</div>
+                <button id="enr-btn-tip-1" class="btn-action" style="display:none; background:#555;" onclick="irATipificacion('enr')">Ir a Tipificación</button>
+            </div>
+            <div id="enr-step2" class="interaction-step">
+                <div class="script-text">Mucho gusto Sr. / Srita., antes que nada le informo que en <span class="highlight">AFORE BANAMEX</span> sus datos personales están protegidos, puede consultar nuestro aviso de privacidad en www.aforebanamex.com.mx o bien si Usted así lo desea, en este momento lo puedo transferir para que escuche nuestro Aviso de Privacidad.<br><br><strong>¿Desea escucharlo?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="enr_r2" onclick="nextStepEnr(2, 'si')"> Sí</label><label><input type="radio" name="enr_r2" onclick="nextStepEnr(2, 'no')"> No</label></div>
+                <div id="enr-msg-privacy" class="system-msg msg-info" style="display:none;">[Sistema]: Transfiriendo a IVR de Aviso de Privacidad... (Al terminar, continuar).</div>
+            </div>
+            <div id="enr-step3" class="interaction-step">
+                <div class="script-text">Sr. / Srita., le llamó en seguimiento al trámite de enrolamiento que realizó con nosotros y queremos confirmar la información.<br><br><strong>¿Podemos continuar?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="enr_r3" onclick="nextStepEnr(3, true)"> Sí</label><label><input type="radio" name="enr_r3" onclick="nextStepEnr(3, false)"> No</label></div>
+                <div id="enr-opciones-container" style="display:none; margin-top:15px; border-top:1px solid #ccc; padding-top:10px;"><label style="font-weight:bold;">Opciones (Razón del rechazo):</label><select id="enr-opciones-rechazo" onchange="document.getElementById('enr-btn-tip-3').style.display = 'inline-block'"><option value="">SELECCIONE</option><option value="No tengo tiempo en este momento">No tengo tiempo en este momento</option><option value="No tengo tiempo estoy ocupado">No tengo tiempo estoy ocupado</option><option value="No me gusta dar información por teléfono">No me gusta dar información por teléfono</option><option value="Ya me habían llamado anteriormente">Ya me habían llamado anteriormente</option><option value="No me interesa">No me interesa</option><option value="Yo me acerco después a un care a preguntar">Yo me acerco después a un care a preguntar</option><option value="Titular Molesto">Titular Molesto</option></select><br><button id="enr-btn-tip-3" class="btn-action" style="display:none; background:#555;" onclick="irATipificacion('enr')">Ir a Tipificación</button></div>
+            </div>
+            <div id="enr-step4" class="interaction-step">
+                <div class="script-text">La tranquilidad de nuestros clientes es nuestra prioridad, por esa razón esta llamada está siendo grabada. Teniendo en cuenta que para <span class="highlight">AFORE BANAMEX</span> la calidad en el servicio es muy importante, antes de continuar debo corroborar un dato:<br><strong>¿Podría por favor indicarme su nombre completo y/o Curp?</strong></div>
+                <div class="validation-grid"><label>Nombre Completo:</label><select id="enr-val-nombre"><option>SELECCIONE</option><option>CORRECTO</option><option>INCORRECTO</option></select><label>Número Telefónico:</label><select id="enr-val-tel"><option>SELECCIONE</option><option>CORRECTO</option><option>INCORRECTO</option></select><label>CURP:</label><select id="enr-val-curp"><option>SELECCIONE</option><option>CORRECTO</option><option>INCORRECTO</option></select></div>
+                <button class="btn-action" onclick="validarDatosEnr()">Confirmar Datos</button>
+                <div id="enr-error-val" class="system-msg msg-end" style="display:none;">Error: Debe validar al menos un dato como "CORRECTO".</div>
+            </div>
+            <div id="enr-step5" class="interaction-step">
+                <div class="script-text">Sr./ Sra./ Srita. Tengo en sistema que cuando acudió al CARE (Centro de Atención para el Retiro) a realizar su trámite para su Expediente de Identificación Electrónico existieron inconvenientes al realizar la toma de alguna de sus huellas dactilares dentro del proceso queremos confirmar si usted tiene conocimiento.</div>
+                <div class="radio-group"><label><input type="radio" name="enr_r5" onclick="nextStepEnr(5, true)"> Sí</label><label><input type="radio" name="enr_r5" onclick="nextStepEnr(5, false)"> No</label></div>
+                <div id="enr-huellas-no" class="huellas-no-msg" style="display:none;"><p><strong>"Nos gustaría identificar si usted sabe sí sus huellas fueron registradas con excepciones..."</strong></p><div class="instruction-block"><ul><li>En caso de que el cliente mantenga su postura... canalizar al CARE.</li><li>En caso de que no recuerde el número de huellas... registrar No coincidencia.</li><li>En caso de que el cliente mencione que no tiene excepciones... enviar a CARE.</li></ul></div><button class="btn-action" onclick="nextStepEnr(5, 'continuar')">Continuar al Cierre</button></div>
+            </div>
+            <div id="enr-step6" class="interaction-step">
+                <div class="script-text" style="background-color: #e3f2fd; padding: 15px; border-radius: 5px;"><p><strong>Gracias a esta llamada y a la confirmación de sus datos, su trámite de enrolamiento continúa en proceso.</strong></p><p>Le recomendamos que, en caso de haber recibido instrucciones adicionales al acudir al Centro de Atención para el Retiro (CARE) por parte de un Asesor Previsional, las siga tal como le fueron indicadas.</p><p>El tiempo de respuesta del trámite es de <strong>5 a 10 días hábiles</strong>. Una vez concluido este periodo, podrá acudir nuevamente al Centro de Atención para el Retiro (CARE) para realizar cualquier otro trámite de su interés o dar seguimiento al actual.</p><p>Para cualquier duda sobre su cuenta individual, puede comunicarse a nuestro Centro de Atención Telefónica al <strong>55 2262 3673</strong>, de lunes a sábado, de 8:00 a. m. a 8:00 p. m., sin costo desde todo el país.</p></div><br><button class="btn-action" onclick="irATipificacion('enr')">Finalizar y Tipificar</button>
+            </div>
+            <div id="enr-step7" class="interaction-step" style="border-left-color: #28a745;">
+                <h3 style="color:var(--bana-blue);">TIPIFICACIÓN ENROLAMIENTO</h3>
+                <div class="tipif-grid">
+                    <label>Calificación:</label><select id="enr-calif"><option>SELECCIONE</option><option>CONTACTO EFECTIVO</option><option>CONTACTO NO EFECTIVO</option></select>
+                    <label>Tipificación:</label><select id="enr-tipif" onchange="verificarAgenda('enr')"><option value="">SELECCIONE</option><option value="FULL" class="opt-full">FULL - CONTACTO EXITOSO (CONFIRMA EXCEPCIONES)</option><option value="FULL" class="opt-full">FULL - CONTACTO EXITOSO (NO CONFIRMA EXCEPCIONES)</option><option value="DTT" class="opt-dtt">DTT - Cliente no está interesado</option><option value="TRU" class="opt-other">TRU - Cuelga llamada</option><option value="OCU" class="opt-other">OCU - Teléfono ocupado</option><option value="INT" class="opt-other">INT - Suena de 1 a 5 veces y no responde</option><option value="MED" class="opt-other">MED - Trabajador pide llamar después</option><option value="NCO" class="opt-other">NCO - Trabajador no se encuentra</option><option value="NCA" class="opt-other">NCA - El apoderado no se encuentra</option><option value="CEL" class="opt-other">CEL - Fuera de servicio & Buzón</option><option value="DNC" class="opt-other">DNC - Datos no coinciden</option><option value="FIN" class="opt-fin">FIN - Finado</option></select>
+                    <label>Comentarios:</label><textarea id="enr-coment"></textarea>
+                </div>
+                <div id="enr-agenda" class="agenda-panel"><h4>📅 Agendar (MED)</h4><input type="date" id="enr-date"> <input type="time" id="enr-time"></div>
+                <button class="btn-save" onclick="guardarInteraccion('Enrolamiento')">GUARDAR INTERACCIÓN</button>
+            </div>
+        </div>
 
-        let html = '';
-        // Fallback robusto para evitar "undefined"
-        const cl = state.client || { org:'000', acct:'0000000', name:'NO CLIENT', cards:[], billing:{type:'00'}, insurance:[], auths:[], related:[], memos:[], hist:{}, info:{}, statements:[] };
-        const h = cl.hist || {};
-        const inf = cl.info || { addr1:'UNKNOWN', addr2:'', city:'', state:'', zip:'00000', home_phone:'0000000000', mobile:'0000000000', rfc:'XXXX000000', email:'NO@MAIL.COM' };
-        const commonHeader = `
-<div class="row"><span class="bg-inv">${state.subScreen || 'MENU'}</span> ( <span class="white">${state.cursorPos==='TOP'?state.buffer:''}</span>${state.cursorPos==='TOP'?'<span class="cursor"></span>':''} )            <span class="cyan">IBI SERVICES MEXICO " MPT1 "    PAGE 0${state.page}</span></div>
-<div class="row">1 <span class="cyan">ORG</span> ${cl.org.substring(0,3)}          0 <span class="cyan">ACCT</span> ${cl.acct}          000   <span class="cyan">REL</span>       <span class="cyan">PLANS</span>  4</div>`;
-        
-        // ------------------ PANTALLAS BASE ------------------
-        if (state.screen === 'LOGIN') {
-            html = `<br><br><div class="green">Ambiente de producao BRADESCARD / MEXICO Nucleo Alphaville</div><br><div class="green">APLICACAO: <span class="white">${state.buffer}</span><span class="cursor"></span></div><br><br><br><div class="cyan">Instrucción: Digite CICSMPT1 y de ENTER.</div>`;
-        } 
-        else if (state.screen === 'SIGNON') {
-            html = `<div class="cyan">WELCOME TO CICS TS 5.1</div><br><div class="green">Type your userid and password, then press ENTER:</div><br><div class="green"> Userid . . . . <span class="white">${state.cursorPos==='USER'?state.buffer:'M0000JXD'}</span>${state.cursorPos==='USER'?'<span class="cursor"></span>':''}</div><div class="green"> Password . . . <span class="white">${state.cursorPos==='PASS'?'*'.repeat(state.buffer.length):''}</span>${state.cursorPos==='PASS'?'<span class="cursor"></span>':''}</div><br><br><div class="yellow">Tips: User M0000JXD / Pass BRADES1</div>`;
-        }
-        else if (state.screen === 'ASRS') {
-            html = `<div class="row"><span class="bg-inv">ASRS</span> ( <span class="white">${state.cursorPos==='TOP'?state.buffer:''}</span>${state.cursorPos==='TOP'?'<span class="cursor"></span>':''} )            <span class="cyan">IBI SERVICES MEXICO " MPT1 "    PAGE 01</span></div><div class="cyan" style="text-align:center">ASM STATUS SETTING</div><br><div class="green">ACCT SUPPORT REP      HF6 - TRAINEE</div><br><div class="yellow">1 CURRENT STATUS       (<span class="white">${state.cursorPos==='BODY'?state.buffer:(state.userActivated?'A':'')}</span>${state.cursorPos==='BODY'?'<span class="cursor"></span>':''})</div><br><div class="green">      A - ACTIVE      B - ON BREAK</div>`;
-        }
-        else if (state.screen === 'MENU') {
-            html = `
-<div class="row"><span class="bg-inv">ASMU</span> ( <span class="white">${state.buffer}</span><span class="cursor"></span> )            <span class="cyan">IBI SERVICES MEXICO " MPT1 "    PAGE 01</span></div>
-<div class="cyan" style="text-align:center">PROCESSING MENU</div><br>
-<div class="green"> 1. ASMW - ACCOUNT WORK           9. ARQB - BILLING METHOD</div>
-<div class="green"> 2. ARSD - STATEMENT DISPLAY     10. ASRS - ACCT REP STATUS</div>
-<div class="green"> 3. ARIQ - ACCOUNT INQUIRY       11. ARDQ - INSURANCE INQ</div>
-<div class="green"> 4. ASHI - CONTACT HISTORY       13. ARQE - ACCOUNT EMBOSSING</div>
-<div class="green"> 5. ARTD - TRANS DISPLAY         14. ARTI - INSTALLMENT BILL</div>
-<div class="green"> 6. ARNL - NAME LOCATE           15. ARIC - RELATED ACCOUNTS</div>
-<div class="green"> 7. ARXQ - AGREEMENT HISTORY     16. OFAA - AUTH DECLINES</div>
-<div class="green"> 8. ARQN - OWNER INFORMATION</div>
-<br><div class="white">SELECCIONA CÓDIGO DE 4 LETRAS (EJ: ARIQ, ARNL)</div>`;
-        }
-        // ------------------ PANTALLAS APLICATIVO ------------------
-        else if (state.screen === 'APP') {
+        <div id="crm-ppp-dep" class="crm-content" style="display:none;">
+            <h2 class="crm-title">DEPENDENCIA CRM</h2>
+            <div id="ppp-step1" class="interaction-step visible">
+                <div class="script-text">Buenos D/T/N mi nombre es de <span class="highlight">AFORE BANAMEX</span>, ¿Tengo el gusto con el/la Sr. / Srita. Por favor?</div>
+                <div class="radio-group"><label><input type="radio" name="ppp_r1" onclick="nextStepPpp(1, true)"> Sí</label><label><input type="radio" name="ppp_r1" onclick="nextStepPpp(1, false)"> No</label></div>
+                <div class="alert-box-red">! Recuerda que debes conseguir un "SI" textual de confirmación por parte del cliente...<br>1. ¿Me puede confirmar con un "SI" o un "NO" si es usted XXXXXX?</div>
+                <div class="alert-box-yellow">¡Aviso! <br>En <strong>AFORE BANAMEX</strong> sus datos personales están protegidos, consulte el aviso de privacidad en www.aforebanamex.com.mx o si lo prefiere le puedo transferir en este momento.<br><br><strong>RECUERDA QUE ES OBLIGATORIO MENCIONAR DE FORMA CORRECTA Y COMPLETA EL AVISO DE PRIVACIDAD, SI ES NECESARIO DILO NUEVAMENTE</strong><br><br><label><input type="checkbox" id="ppp-chk-priv-1"> ¿Mencionaste el aviso de privacidad?</label></div>
+                <div id="ppp-msg-1-no" class="system-msg msg-end" style="display:none;">[Fin de llamada]: Agradecemos su tiempo.</div>
+                <button id="ppp-btn-tip-1" class="btn-action" style="display:none; background:#555;" onclick="irATipificacion('ppp')">Ir a Tipificación</button>
+            </div>
+            <div id="ppp-step2" class="interaction-step">
+                <div class="script-text">Sr. / Srita., mi nombre es de <span class="highlight">AFORE BANAMEX</span> el motivo de mi llamada es Informarle que en días pasados AFORE BANAMEX, recibió por parte del C. un documento...<br><br>De acuerdo a lo señalado en el artículo 436 bis...<br><br><strong>¿Me podrias regalar unos minutos?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppp_r2" onclick="nextStepPpp(2, true)"> Sí</label><label><input type="radio" name="ppp_r2" onclick="nextStepPpp(2, false)"> No</label></div>
+            </div>
+            <div id="ppp-step2-no" class="interaction-step">
+                <div class="alert-box-yellow">¡Aviso! En <strong>AFORE BANAMEX</strong> sus datos personales están protegidos...<br><br><label><input type="checkbox" id="ppp-chk-priv-2"> ¿Mencionaste el aviso de privacidad?</label></div>
+                <div class="script-text">Gracias por el tiempo que dedicó a esta llamada. Mi nombre es de <span class="highlight">AFORE BANAMEX</span>, que tenga buen(a) día/tarde/noche.</div>
+                <button class="btn-action" onclick="irATipificacion('ppp')">Finalizar y Tipificar</button>
+            </div>
+            <div id="ppp-step3" class="interaction-step">
+                <div class="script-text">Es mi deber informarle que esta llamada está siendo grabada por motivos de calidad.<br><br><strong>1) ¿Me podría confirmar si otorgo el documento antes mencionado al trabajador , que le otorga el derecho al plan privado de pensión?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppp_r3" onclick="nextStepPpp(3, true)"> Sí</label><label><input type="radio" name="ppp_r3" onclick="nextStepPpp(3, false)"> No</label></div>
+            </div>
+            <div id="ppp-step4" class="interaction-step">
+                <div class="script-text"><strong>2) ¿La persona que firmo el documento se encuentra facultada para realizar dicha actividad?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppp_r4" onclick="nextStepPpp(4, true)"> Sí</label><label><input type="radio" name="ppp_r4" onclick="nextStepPpp(4, false)"> No</label></div>
+            </div>
+            <div id="ppp-step5" class="interaction-step">
+                <div class="alert-box-yellow">
+                    ¡Aviso! <br>En <strong>AFORE BANAMEX</strong> sus datos personales están protegidos, consulte el aviso de privacidad en www.aforebanamex.com.mx o si lo prefiere le puedo transferir en este momento.
+                    <br><br>
+                    <strong>RECUERDA QUE ES OBLIGATORIO MENCIONAR DE FORMA CORRECTA Y COMPLETA EL AVISO DE PRIVACIDAD, SI ES NECESARIO DILO NUEVAMENTE</strong>
+                    <br><br>
+                    <label><input type="checkbox" id="ppp-chk-priv-5"> ¿Mencionaste el aviso de privacidad?</label>
+                </div>
+                <div class="script-text">Gracias por el tiempo que dedicó a esta llamada. Mi nombre es de <span class="highlight">AFORE BANAMEX</span>, que tenga buen(a) día/tarde/noche.</div>
+                <br><button class="btn-action" onclick="irATipificacion('ppp')">Finalizar y Tipificar</button>
+            </div>
+            <div id="ppp-step-tip" class="interaction-step" style="border-left-color: #28a745;">
+                <h3 style="color:var(--bana-blue);">TIPIFICACIÓN DEPENDENCIA</h3>
+                <div class="tipif-grid">
+                    <label>Calificación:</label><select id="ppp-calif"><option>SELECCIONE</option><option>EFECTIVO</option><option>NO CONTACTO</option><option>CONTACTO NO EFECTIVO</option></select>
+                    <label>SubCalificación:</label><select id="ppp-subcalif"><option>SELECCIONE</option><option>CONFIRMA DOCUMENTO</option><option>NO CONFIRMA DOCUMENTO</option></select>
+                    <label>Tipificación:</label><select id="ppp-tipif" onchange="verificarAgenda('ppp')"><option value="">SELECCIONE</option><option value="FULL" class="opt-full">FULL - CONTACTO EXITOSO</option><option value="MED" class="opt-other">MED - Llamar después</option><option value="OCU" class="opt-other">OCU - Ocupado</option><option value="INT" class="opt-other">INT - No responde</option><option value="CEL" class="opt-other">CEL - Buzón</option></select>
+                    <label>Comentarios:</label><textarea id="ppp-coment"></textarea>
+                </div>
+                <div id="ppp-agenda" class="agenda-panel"><h4>📅 Agendar (MED)</h4><input type="date" id="ppp-date"> <input type="time" id="ppp-time"></div>
+                <button class="btn-save" onclick="guardarInteraccion('PPP Dependencia')">GUARDAR INTERACCIÓN</button>
+            </div>
+        </div>
+
+        <div id="crm-ppt-trab" class="crm-content" style="display:none;">
+            <h2 class="crm-title">PPT TRABAJADOR</h2>
+            <div id="ppt-step1" class="interaction-step visible">
+                <div style="margin-bottom:15px; font-weight:bold;">Ext. telefónica: <input type="text" id="ppt-ext" placeholder="Ingrese Extensión" style="width:150px; padding:5px;"></div>
+                <div class="script-text">Buenos D/T/N mi nombre es de <span class="highlight">AFORE BANAMEX</span>, ¿Tengo el gusto con el/la Sr./Srita. Por favor?</div>
+                <div class="radio-group"><label><input type="radio" name="ppt_r1" onclick="nextStepPptTrab(1, true)"> Sí</label><label><input type="radio" name="ppt_r1" onclick="nextStepPptTrab(1, false)"> No</label></div>
+                <div class="alert-box-red" id="ppt-box-red" style="display:none;">! Recuerda que debes conseguir un "SI" textual de confirmación...<br>1. ¿Me puede confirmar con un "SI" o un "NO" si es usted XXXXXX?<br>2. Por protocolo de seguridad...</div>
+                <div class="alert-box-yellow" id="ppt-box-yellow-no" style="display:none;">¡Aviso! <br>En <strong>AFORE BANAMEX</strong> sus datos personales están protegidos, consulte el aviso de privacidad en www.aforebanamex.com.mx o si lo prefiere le puedo transferir en este momento.<br><br><span style="color:#d9534f; font-weight:bold;">RECUERDA QUE ES OBLIGATORIO MENCIONAR DE FORMA CORRECTA Y COMPLETA EL AVISO DE PRIVACIDAD, SI ES NECESARIO DILO NUEVAMENTE</span><br><br><label><input type="checkbox" id="ppt-chk-priv-1-no"> ¿Mencionaste el aviso de privacidad?</label></div>
+                <button id="ppt-btn-next-1" class="btn-action" style="display:none;" onclick="nextStepPptTrab(1, 'continuar')">Continuar</button>
+            </div>
+            <div id="ppt-step2" class="interaction-step">
+                <div class="script-text">Sr. / Srita. mi nombre es de <span class="highlight">AFORE BANAMEX</span>, Gracias por recibir nuestra llamada... ¿Nos gustaría realizarle unas preguntas sobre el servicio que recibió por parte de AFORE BANAMEX al momento de acudir a solicitar su plan privado de pensiones?<br><br><strong>¿Me podrias regalar unos minutos?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppt_r2" onclick="nextStepPptTrab(2, true)"> Sí</label><label><input type="radio" name="ppt_r2" onclick="nextStepPptTrab(2, false)"> No</label></div>
+            </div>
+            <div id="ppt-step2-no" class="interaction-step">
+                <div class="alert-box-yellow">¡Aviso! En <strong>AFORE BANAMEX</strong> sus datos personales están protegidos...<br>RECUERDA QUE ES OBLIGATORIO MENCIONAR DE FORMA CORRECTA Y COMPLETA EL AVISO DE PRIVACIDAD...<br><br><label><input type="checkbox" id="ppt-chk-priv-2"> ¿Mencionaste el aviso de privacidad?</label></div>
+                <button class="btn-action" onclick="irATipificacion('ppt')">Finalizar y Tipificar</button>
+            </div>
+            <div id="ppt-step3" class="interaction-step">
+                <div class="script-text">Es mi deber informarle que esta llamada está siendo grabada por motivos de calidad.<br><br>Tenemos nuestros registros que en días pasados usted realizó un trámite para el retiro de recursos de su Cuenta Individual al amparo de un Plan Privado de Pensiones <strong>¿Es correcto?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppt_r3" onclick="nextStepPptTrab(3, true)"> Sí</label><label><input type="radio" name="ppt_r3" onclick="nextStepPptTrab(3, false)"> No</label></div>
+            </div>
+            <div id="ppt-step4" class="interaction-step">
+                <div class="script-text">Le comento que todos los trámites que usted realiza en <span class="highlight">AFORE BANAMEX</span> son gratuitos, Me puede indicar <strong>¿En AFORE BANAMEX le pidieron o le cobraron algún Importe...?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppt_r4" onclick="nextStepPptTrab(4, true)"> Sí</label><label><input type="radio" name="ppt_r4" onclick="nextStepPptTrab(4, false)"> No</label></div>
+                <div id="ppt-monto-container" style="display:none; margin-top:10px;"><label style="font-weight:bold;">Monto:</label><input type="number" id="ppt-monto" placeholder="Ingrese el monto"></div><br><button class="btn-action" onclick="nextStepPptTrab(4, 'continuar')">Siguiente</button>
+            </div>
+            <div id="ppt-step5" class="interaction-step">
+                <div class="script-text">Nos puede confirmar si <strong>¿Usted desea continuar con el trámite para el retiro de recursos de su Cuenta Individual al amparo de su Plan Privado de Pensiones?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="ppt_r5" onclick="nextStepPptTrab(5, true)"> Sí</label><label><input type="radio" name="ppt_r5" onclick="nextStepPptTrab(5, false)"> No</label></div>
+            </div>
+            <div id="ppt-step6" class="interaction-step">
+                <div class="alert-box-yellow">¡Aviso! En <strong>AFORE BANAMEX</strong> sus datos personales están protegidos...<br>RECUERDA QUE ES OBLIGATORIO MENCIONAR DE FORMA CORRECTA Y COMPLETA EL AVISO DE PRIVACIDAD...<br><br><label><input type="checkbox" id="ppt-chk-priv-6"> ¿Mencionaste el aviso de privacidad?</label></div>
+                <button class="btn-action" onclick="irATipificacion('ppt')">Finalizar y Tipificar</button>
+            </div>
+            <div id="ppt-step7" class="interaction-step" style="border-left-color: #28a745;">
+                <h3 style="color:var(--bana-blue);">TIPIFICACIÓN TRABAJADOR</h3>
+                <div class="tipif-grid">
+                    <label>Calificación:</label><select id="ppt-calif"><option>SELECCIONE</option><option>EFECTIVO</option><option>NO CONTACTO</option><option>CONTACTO NO EFECTIVO</option></select>
+                    <label>Tipificación:</label><select id="ppt-tipif" onchange="verificarAgenda('ppt')"><option value="">SELECCIONE</option><option value="FULL" class="opt-full">FULL - CONTACTO EXITOSO</option><option value="DTT" class="opt-dtt">DTT - Cliente no está interesado</option><option value="TRU" class="opt-other">TRU - Cuelga llamada</option><option value="OCU" class="opt-other">OCU - Teléfono ocupado</option><option value="MED" class="opt-other">MED - Llamar después</option><option value="NCO" class="opt-other">NCO - Trabajador no se encuentra</option><option value="CEL" class="opt-other">CEL - Buzón</option><option value="FIN" class="opt-fin">FIN - Finado</option></select>
+                    <label>Comentarios:</label><textarea id="ppt-coment"></textarea>
+                </div>
+                <div id="ppt-agenda" class="agenda-panel"><h4>📅 Agendar (MED)</h4><input type="date" id="ppt-date"> <input type="time" id="ppt-time"></div>
+                <button class="btn-save" onclick="guardarInteraccion('PPT Trabajador')">GUARDAR INTERACCIÓN</button>
+            </div>
+        </div>
+
+        <div id="crm-notiafo" class="crm-content" style="display:none;">
+            <h2 class="crm-title">NOTIAFO CRM</h2>
+            <div id="not-step1" class="interaction-step visible">
+                <div class="script-text">Buenos D/T/N mi nombre es de <span class="highlight">AFORE BANAMEX</span>, ¿Tengo el gusto con el/la Sr. / Srita. Por favor?</div>
+                <div class="radio-group"><label><input type="radio" name="not_r1" onclick="nextStepNotiafo(1, true)"> Sí</label><label><input type="radio" name="not_r1" onclick="nextStepNotiafo(1, false)"> No</label></div>
+                <div class="alert-box-red" id="not-red-alert" style="display:none;">! Recuerda que debes conseguir un "SI" textual de confirmación...<br>1. ¿Me puede confirmar con un "SI" o un "NO" si es usted XXXXXX?</div>
+                <div id="not-step1-no" style="display:none;"><div class="alert-box-yellow">¡Aviso!<br>En CITIBANAMEX AFORE sus datos personales están protegidos...<br><strong>RECUERDA QUE ES OBLIGATORIO MENCIONAR...</strong><br><br><label><input type="checkbox" id="not-chk-priv-1"> ¿Mencionaste el aviso de privacidad?</label></div><div class="script-text">Gracias por el tiempo que dedicó a esta llamada...</div><button class="btn-action" onclick="irATipificacion('not')">Ir a Tipificación</button></div>
+                <button id="not-btn-cont-1" class="btn-action" style="display:none;" onclick="nextStepNotiafo(1, 'continuar')">Continuar</button>
+            </div>
+            <div id="not-step2" class="interaction-step">
+                <div class="script-text">Sr. / Srita., mi nombre es de CITIBANAMEX AFORE... Le informamos que los datos que tenemos registrados en esta Administradora difieren de los datos que reporta el Instituto (IMSS)...<br><br>Es mi deber informarle que esta llamada está siendo grabada por motivos de calidad.<br><br><strong>¿Me puede proporcionar su Nombre completo, RFC o su número telefónico, por favor?</strong></div>
+                <div style="margin-top:10px;"><label>Nombre Completo:</label> <input type="text" id="not-nombre"><br><label>RFC:</label> <input type="text" id="not-rfc"><br><label>Numero Telefonico:</label> <input type="text" id="not-tel"></div>
+                <div class="radio-group" style="margin-top:15px;"><label><input type="radio" name="not_r2" onclick="nextStepNotiafo(2, true)"> Sí</label><label><input type="radio" name="not_r2" onclick="nextStepNotiafo(2, false)"> No</label></div>
+            </div>
+            <div id="not-step2-obj" class="interaction-step">
+                <div class="script-text" style="color:#d9534f; font-weight:bold;">Le informo que por disposición oficial es indispensable que Usted nos confirme por lo menos uno de sus datos para poder continuar con el proceso, ¿Está Usted de acuerdo?</div>
+                <div class="radio-group"><label><input type="radio" name="not_r2b" onclick="nextStepNotiafo('2b', true)"> Sí</label><label><input type="radio" name="not_r2b" onclick="nextStepNotiafo('2b', false)"> No</label></div>
+            </div>
+            <div id="not-step3" class="interaction-step">
+                <div class="script-text">Lo invitamos a que acuda a cualquiera de los Módulos Especializados de Servicio Afore o Centro de Atención para el Retiro (CARE), presentando original de los siguientes documentos:<ul><li>Identificación Oficial</li><li>Comprobante de Domicilio</li><li>Acta y CURP</li><li>Documento Migratorio (FM3 ó FM2)</li></ul></div>
+                <button class="btn-action" onclick="nextStepNotiafo(3, 'continuar')">Continuar al Cierre</button>
+            </div>
+            <div id="not-step4" class="interaction-step">
+                <div class="alert-box-yellow">¡Aviso!<br>En CITIBANAMEX AFORE sus datos personales están protegidos...<br><br><strong>RECUERDA QUE ES OBLIGATORIO MENCIONAR...</strong><br><br><label><input type="checkbox" id="not-chk-priv-end"> ¿Mencionaste el aviso de privacidad?</label></div>
+                <button class="btn-action" onclick="irATipificacion('not')">Finalizar y Tipificar</button>
+            </div>
+            <div id="not-step-tip" class="interaction-step" style="border-left-color: #28a745;">
+                <h3 style="color:var(--bana-blue);">TIPIFICACIÓN NOTIAFO</h3>
+                <div class="tipif-grid">
+                    <label>Calificación:</label><select id="not-calif"><option>SELECCIONE</option><option>EFECTIVO</option><option>NO CONTACTO</option><option>CONTACTO NO EFECTIVO</option></select>
+                    <label>SubCalificación:</label><select id="not-subcalif"><option>SELECCIONE</option><option>CONFIRMACIÓN DE CLIENTE PARA ACUDIR AL CARE</option><option>Cliente no está interesado</option><option>Datos no coinciden</option></select>
+                    <label>Tipificación (Agenda):</label><select id="not-tipif" onchange="verificarAgenda('not')"><option value="">SELECCIONE</option><option value="FULL">FULL - COMPLETADO</option><option value="MED">MED - Llamar después</option></select>
+                    <label>Comentarios:</label><textarea id="not-coment"></textarea>
+                </div>
+                <div id="not-agenda" class="agenda-panel"><h4>📅 Agendar (MED)</h4><input type="date" id="not-date"> <input type="time" id="not-time"></div>
+                <button class="btn-save" onclick="guardarInteraccion('NOTIAFO')">GUARDAR INTERACCIÓN</button>
+            </div>
+        </div>
+
+        <div id="crm-portal" class="crm-content" style="display:none;">
+            <h2 class="crm-title">PORTAL PROSPECTOS</h2>
+            <div id="por-step1" class="interaction-step visible">
+                <div style="margin-bottom:15px; font-weight:bold;">Ext. telefónica: <input type="text" id="por-ext" placeholder="Ingrese Extensión" style="width:150px;"></div>
+                <div class="script-text">Buenos D/T/N mi nombre es de <span class="highlight">AFORE BANAMEX</span>, ¿Tengo el gusto con el/la Sr./Srita. Por favor?</div>
+                <div class="radio-group"><label><input type="radio" name="por_r1" onclick="nextStepPortal(1, true)"> Sí</label><label><input type="radio" name="por_r1" onclick="nextStepPortal(1, false)"> No</label></div>
+                <div class="alert-box-red" id="por-red-alert" style="display:none;">! Recuerda que debes conseguir un "SI" textual de confirmación...</div>
+                <div id="por-step1-no" style="display:none;"><div class="alert-box-yellow">¡Aviso! En AFORE BANAMEX...<br>RECUERDA QUE ES OBLIGATORIO...<br><label><input type="checkbox"> ¿Mencionaste el aviso?</label></div><button class="btn-action" onclick="irATipificacion('por')">Ir a Tipificación</button></div>
+                <button id="por-btn-cont-1" class="btn-action" style="display:none;" onclick="nextStepPortal(1, 'continuar')">Continuar</button>
+            </div>
+            <div id="por-step2" class="interaction-step">
+                <div class="script-text">Sr. /Srita. (), como le comentaba, mi nombre es (), me comunico de <span class="highlight">AFORE BANAMEX</span>, el motivo de mi llamada es confirmar la solicitud de cambio de Afore que realizó recientemente a través de nuestro portal web. ¿Es correcto?</div>
+                <div class="radio-group"><label><input type="radio" name="por_r2" onclick="nextStepPortal(2, true)"> Sí</label><label><input type="radio" name="por_r2" onclick="nextStepPortal(2, false)"> No</label></div>
+            </div>
+            <div id="por-step3" class="interaction-step">
+                <div class="script-text">En <span class="highlight">AFORE BANAMEX</span> sus datos están protegidos... Le informo que esta llamada está siendo grabada por motivos de calidad, ¿está de acuerdo en que sigamos con la misma para brindarle información?</div>
+                <div class="radio-group"><label><input type="radio" name="por_r3" onclick="nextStepPortal(3, true)"> Sí</label><label><input type="radio" name="por_r3" onclick="nextStepPortal(3, false)"> No</label></div>
+            </div>
+            <div id="por-step4" class="interaction-step">
+                <div class="script-text">Nuestro proceso de cambio de Afore, es presencial y personalizado, por lo que es necesario programar una cita con uno de nuestros asesores previsionales ya sea en alguna de nuestras sucursales o en su oficina/domicilio.</div>
+                <div style="display:flex; gap:20px; margin-top:15px;"><button class="btn-action" style="background:#002D72;" onclick="nextStepPortal(4, 'sucursal')">Sucursal</button><button class="btn-action" style="background:#002D72;" onclick="nextStepPortal(4, 'visita')">Visita</button></div>
+            </div>
+            <div id="por-step-sucursal" class="interaction-step">
+                <div class="script-text"><strong>• Sucursal:</strong> ¿Sabe a qué sucursal desea asistir o si me proporciona su código postal o municipio puedo ofrecerle las opciones más cercanas?</div>
+                <div style="margin-top:10px;"><label>Sucursal Agendada:</label> <input type="text" id="por-sucursal-nom"></div>
+                <button class="btn-action" onclick="nextStepPortal('sucursal', 'fin')">Finalizar Agendamiento</button>
+            </div>
+            <div id="por-step-visita" class="interaction-step">
+                <div class="script-text"><strong>• Visita:</strong> ¿Podría indicarme la dirección en la cuál recibirá al asesor?</div>
+                <div class="form-grid-3"><div><label>Calle:</label><input type="text" id="por-calle"></div><div><label>CP:</label><input type="text" id="por-cp"></div><div><label>Colonia:</label><input type="text" id="por-colonia"></div><div><label>Alcaldía:</label><input type="text" id="por-alcaldia"></div><div><label>Estado:</label><input type="text" id="por-estado"></div><div><label>Referencias:</label><input type="text" id="por-ref"></div><div><label>Tel:</label><input type="text" id="por-tel"></div><div><label>Email:</label><input type="text" id="por-email"></div></div>
+                <div style="margin-top:15px;"><label>Fecha:</label> <input type="date" id="por-cita-date"><label>Hora:</label> <select id="por-cita-time"><option>8:00 AM</option><option>12:00 PM</option><option>4:00 PM</option></select></div>
+                <div style="color:red; font-size:0.9rem; margin-top:10px; font-weight:bold;">Para poder realizar su trámite necesitará su Credencial de Elector vigente...</div>
+                <button class="btn-action" onclick="nextStepPortal('visita', 'fin')">Finalizar Agendamiento</button>
+            </div>
+            <div id="por-step-end" class="interaction-step">
+                <div class="alert-box-yellow">RECUERDA QUE ES OBLIGATORIO MENCIONAR...<br><label><input type="checkbox"> ¿Mencionaste el aviso?</label></div>
+                <button class="btn-action" onclick="irATipificacion('por')">Ir a Tipificación</button>
+            </div>
+            <div id="por-step-tip" class="interaction-step" style="border-left-color: #28a745;"><h3>TIPIFICACIÓN PORTAL</h3><div class="tipif-grid"><label>Tipificación:</label><select id="por-tipif" onchange="verificarAgenda('por')"><option>FULL-R</option><option>FULL-S</option><option>MED</option></select><label>Comentarios:</label><textarea id="por-coment"></textarea></div><div id="por-agenda" class="agenda-panel"><input type="date" id="por-date"><input type="time" id="por-time"></div><button class="btn-save" onclick="guardarInteraccion('Portal')">GUARDAR</button></div>
+        </div>
+
+        <div id="crm-confout" class="crm-content" style="display:none;">
+            <h2 class="crm-title">CONFIRMACIÓN OUT</h2>
+            <div id="out-step1" class="interaction-step visible">
+                <div class="script-text">Buenos D/T/N mi nombre es , llamamos de <span class="highlight">AFORE BANAMEX</span>, ¿Tengo el gusto con el/la Sr. / Srita Por favor?.</div>
+                <div class="radio-group"><label><input type="radio" name="out_r1" onclick="nextStepOut(1, true)"> Sí</label><label><input type="radio" name="out_r1" onclick="nextStepOut(1, false)"> No</label></div>
+                
+                <div class="alert-box-red">
+                    ! Recuerda que debes conseguir un "SI" textual de confirmación por parte del cliente.<br>
+                    1. ¿Me puede confirmar con un "SI" o un "NO" si es usted XXXXXX?<br>
+                    2. Por protocolo de seguridad, ¿Me puede confirmar con un "SI" o un "NO" si es usted XXXXXX?
+                </div>
+
+                <div id="out-conocido-panel" style="display:none; margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">
+                    <p style="font-weight:bold;">¿Usted conoce al Sr/sra?</p>
+                    <div class="radio-group"><label><input type="radio" name="out_r_conoce" onclick="manejarConocido(true)"> Sí</label><label><input type="radio" name="out_r_conoce" onclick="manejarConocido(false)"> No</label></div>
+                </div>
+                
+                <div id="out-no-conoce-msg" class="system-msg msg-end" style="display:none;">Muchas gracias por la información hasta luego.<br><button class="btn-action" onclick="irATipificacion('out')">Finalizar (EQU)</button></div>
+                <div id="out-conoce-agenda" class="agenda-panel"><p>Validaremos si es posible contactarlo más tarde. Por favor agende:</p><label>Fecha:</label> <input type="date" id="out-date-conoce"><label>Hora:</label> <input type="time" id="out-time-conoce"><br><br><button class="btn-save" onclick="guardarInteraccion('Confirmación OUT - Agenda')">Agendar Segunda Llamada</button></div>
+            </div>
+            <div id="out-step2" class="interaction-step">
+                <div class="script-text">Es mi deber informarle que esta llamada está siendo grabada por motivos de calidad. Sr. /Srita. , para Citibanamex Afore es un gusto recibir su solicitud de cambio de afore.<br><br>¿Sabía qué en los últimos 3 años, más de un millón de clientes se cambiaron a Citibanamex Afore?, usted también puede ser parte de Citibanamex Afore integrante de uno de los grupos financieros más sólidos del mercado.<br><br>El motivo de mi llamada es apoyarle en cómo confirmar y concluir su trámite, este proceso nos llevará solamente <strong>2 minutos</strong>, le comento que es muy importante realizar este paso, debido a que tenemos pocos días para realizarlo, <strong>¿Me permite continuar?</strong></div>
+                <div class="radio-group"><label><input type="radio" name="out_r2" onclick="nextStepOut(2, true)"> Sí</label><label><input type="radio" name="out_r2" onclick="nextStepOut(2, false)"> No</label></div>
+                <div id="out-no-tiempo-panel" style="display:none; margin-top:15px; padding-top:10px;"><p>Entiendo, esta llamada es muy importante... <strong>¿En qué momento desea que le llamemos?</strong></p><div class="radio-group"><label><input type="radio" name="out_r_tiempo" onclick="nextStepOut(2, true)"> Continuar ahora</label><label><input type="radio" name="out_r_tiempo" onclick="document.getElementById('out-agenda-step2').style.display='block'"> Llamar de nuevo</label></div><div id="out-agenda-step2" class="agenda-panel"><label>Fecha:</label><input type="date" id="out-date-step2"><label>Hora:</label><input type="time" id="out-time-step2"><button class="btn-save" onclick="guardarInteraccion('Confirmación OUT - Agenda')">Agendar</button></div></div>
+            </div>
+            <div id="out-step3" class="interaction-step">
+                <div class="script-text">Gracias, por favor:<ol><li>Ingrese a la bandeja de entrada de sus Mensajes o SMS en su teléfono celular.</li><li>Identifique el mensaje con el nombre AFORE</li><li>Ábralo y haga clic en la liga que aparece en el mensaje. En este momento será redireccionado a la página web del Sistema de Ahorro para el Retiro.</li><li>Una vez que se encuentre en la página web, seleccione el botón “continuar trámite”.</li><li>En la siguiente pantalla le pedirá que ingrese un código de seguridad de 4 dígitos el cuál fue enviado a su correo electrónico y tendrá una vigencia de 3 minutos.</li><li>Ingrese su código de seguridad en la pantalla y seleccione “CONTINUAR”.</li><li>Por último, le aparecerá en pantalla la leyenda “Tu solicitud se confirmó con éxito”.</li></ol><br><strong>¡Felicidades!, su proceso de cambio a Citibanamex Afore continua, agradecemos su preferencia.</strong></div>
+                <div style="margin-top:20px; border-top:1px dashed #ccc; padding-top:15px;">
+                    <p><strong>Despedida y Referencias:</strong><br>Por último, me puede proporcionar el nombre de 2 referencias para poder ofrecerles una Asesoría Previsional de su Afore.<br><em>En caso de que no te proporcione algún nombre, agradece y continua la llamada. Si te proporciona alguna referencia, documéntalas y continua la llamada.</em></p>
+                    <div class="form-grid-3"><div><label>Nombre Referencia 1:</label><input type="text" id="out-ref1"></div><div><label>Nombre Referencia 2:</label><input type="text" id="out-ref2"></div></div>
+                </div>
+                <button class="btn-action" onclick="nextStepOut(3, 'continuar')">Finalizar</button>
+            </div>
             
-            // === ARSD (Estados de Cuenta) - CORREGIDO ===
-            if (state.subScreen === 'ARSD') {
-                if (state.page === 1) { // LISTA
-                    const rows = (cl.statements && cl.statements.length > 0) 
-                        ? cl.statements.map((s, idx) => {
-                            const isSelected = state.cursorPos === 'STMT_LIST' && state.rowIndex === idx;
-                            const marker = isSelected ? (state.buffer || '_') : ' '; 
-                            const cursorHtml = isSelected ? '<span class="cursor"></span>' : '';
-                            return `<div class="row"> (<span class="white">${marker}</span>${cursorHtml}) ${s.date}   ( ) 10/01/2025   ( ) 10/12/2024</div>`;
-                        }).join('') 
-                        : '<div class="row yellow">NO STATEMENTS AVAILABLE</div>';
-                    html = `${commonHeader}
-<div class="cyan" style="text-align:center">ON-LINE STATEMENT HISTORY</div><br>
-<div class="white">PLACE AN "X" BEFORE THE DATE OF THE STATEMENT</div>
-<br>${rows}<br><br><div class="white">(X) Seleccionar fecha y presionar ENTER</div>
-<br><div class="cyan footer-nav">PF1=MENU  PF3=ARIQ</div>`;
-                } else { // DETALLE (PAGE 02)
-                    const stmt = state.selectedStmt || {date:'00/00/0000', bal:'.00', min:'.00', cut:'00'};
-                    html = `${commonHeader}
-<div class="cyan" style="text-align:center">STATEMENT SUMMARY</div><br>
-<div class="row">1 DATE THIS STMT  <span class="white">${stmt.date}</span>    BILLING CYCLE  ${stmt.cut}</div>
-<div class="row">2 DATE LAST STMT  10/02/2026</div>
-<div class="row">3 CYC/DATE DUE    ${cl.due_date}</div><br>
-<div class="row">4 CREDIT LIMIT    ${cl.limit}      <span class="cyan">6 TOTAL PMT DUE</span>  <span class="white">${stmt.min}</span></div>
-<div class="row">5 OPEN-TO-BUY     ${cl.avail}      <span class="cyan">7 END BAL</span>        <span class="white">${stmt.bal}</span></div>
-<br><div class="cyan footer-nav">PF1=MENU  PF3=BACK (ARSD LIST)</div>`;
-                }
-            }
+            <div id="out-step-end" class="interaction-step">
+                <div class="alert-box-yellow">
+                    <strong>RECUERDA QUE ES OBLIGATORIO MENCIONAR DE FORMA CORRECTA Y COMPLETA EL AVISO DE PRIVACIDAD, SI ES NECESARIO DILO NUEVAMENTE</strong>
+                    <br><br>
+                    Aviso de privacidad
+                    <br>
+                    Sr./Srita. , le agradecemos nos haya tomado la llamada, le atendió de Afore Banamex, que pase buen (a) D/T/N. Le recordamos que puede comunicarse a nuestro Centro de Atención Telefónica al 55 22 62 36 73 de lunes a sábado de 8:00 am a 8:00 pm., sin costo desde todo el país, en donde con gusto le atenderemos. Por último también le informo que en CITIBANAMEX AFORE sus datos personales están protegidos, puede consultar nuestro aviso de privacidad en www.aforebanamex.com.mx o bien si Usted así lo desea, en este momento lo puedo transferir para que escuche nuestro Aviso de Privacidad, ¿desea escucharlo?
+                    <br><br>
+                    <label><input type="checkbox"> ¿Mencionaste el aviso de privacidad?</label>
+                </div>
+                <div class="script-text">Le atendió de <span class="highlight">AFORE BANAMEX</span> que pase buen día/tardes/noches.</div>
+                <button class="btn-action" onclick="irATipificacion('out')">Ir a Tipificación</button>
+            </div>
 
-            // === ARQB (Billing Method) - CORREGIDO ===
-            else if (state.subScreen === 'ARQB') {
-                html = `${commonHeader}
-<div class="cyan" style="text-align:center">ACCOUNT BASE SEGMENT (BILLING)</div><br>
-<div class="row">   <span class="cyan">BILLING CYCLE:</span> ${cl.cut}   <span class="cyan">NEXT STMT:</span> 15/03/2026</div>
-<br>
-<div class="row yellow">  *** DELIVERY METHOD CONFIGURATION ***</div>
-<br>
-<div class="row">  <span class="cyan">RETURN MAIL IND:</span> <span class="white">${cl.billing.type}</span></div>
-<div class="row">  <span class="cyan">DESCRIPTION:</span>     <span class="green">${cl.billing.type === '02' ? 'DIGITAL' : 'PHYSICAL'}</span></div>
-<br><br>
-<div class="cyan">  00 = PAPER MAIL</div>
-<div class="cyan">  02 = EMAIL STATEMENT</div>
-<br><div class="cyan footer-nav">PF1=MENU  PF3=ARIQ</div>`;
-            }
+            <div id="out-step-tip" class="interaction-step" style="border-left-color: #28a745;">
+                <h3 style="color:var(--bana-blue);">TIPIFICACIÓN CONFIRMACIÓN OUT</h3>
+                <div class="tipif-grid">
+                    <label>Calificación:</label><select id="out-calif"><option>SELECCIONE</option><option>CONTACTO EXITOSO</option><option>CONTACTO NO EXITOSO</option></select>
+                    <label>Tipificación:</label>
+                    <select id="out-tipif" onchange="verificarAgenda('out')">
+                        <option value="">SELECCIONE</option>
+                        <option value="FULL-1" class="opt-full">FULL - LLAMADA EXITOSA TRABAJADOR LOCALIZADO CON SCRIPT (CONFIRMA TRASPASO)</option>
+                        <option value="FULL-2" class="opt-full">FULL - LLAMADA EXITOSA TRABAJADOR LOCALIZADO CON SCRIPT (CONFIRMA, PROBLEMAS CON EL SMS)</option>
+                        <option value="FULL-3" class="opt-full">FULL - LLAMADA EXITOSA TRABAJADOR LOCALIZADO CON SCRIPT ( NO CONFIRMA TRASPASO)</option>
+                        <option value="TRU" class="opt-other">TRU - Cuelga llamada, cortada</option>
+                        <option value="CEL" class="opt-other">CEL - Fuera de servicio & Buzón de voz</option>
+                        <option value="OCU" class="opt-other">OCU - Teléfono ocupado</option>
+                        <option value="INT" class="opt-other">INT - Suena de 1 a 5 veces y no responde</option>
+                        <option value="MED" class="opt-other">MED - Trabajador no contesta el script, pide se le llame después</option>
+                        <option value="NCO" class="opt-other">NCO - Trabajador no se encuentra</option>
+                        <option value="NCA" class="opt-other">NCA - El apoderado no se encuentra</option>
+                        <option value="DNC" class="opt-other">DNC - Datos no coinciden</option>
+                        <option value="REC" class="opt-red">REC - El trabajador contesta y no reconoce haber realizado el trámite...</option>
+                        <option value="EQU" class="opt-red">EQU - No conocen al trabajador</option>
+                        <option value="TMO" class="opt-red">TMO - Cliente molesto, no está interesado...</option>
+                        <option value="FIN" class="opt-fin">FIN - Finado</option>
+                        <option value="DTT" class="opt-dtt">DTT - Cliente no está interesado en recibir información</option>
+                    </select>
+                    <label>Comentarios:</label><textarea id="out-coment"></textarea>
+                </div>
+                <div id="out-agenda" class="agenda-panel"><h4>📅 Agendar (MED)</h4><input type="date" id="out-date"> <input type="time" id="out-time"></div>
+                <button class="btn-save" onclick="guardarInteraccion('Confirmación OUT')">GUARDAR INTERACCIÓN</button>
+            </div>
+        </div>
 
-            // === ARNL (Búsqueda) - RESETEABLE ===
-            else if (state.subScreen === 'ARNL') {
-                if (state.page === 0) {
-                    html = `
-<div class="row"><span class="bg-inv">ARNL</span> ( <span class="white">${state.cursorPos==='TOP'?state.buffer:''}</span>${state.cursorPos==='TOP'?'<span class="cursor"></span>':''} )            <span class="cyan">PAGE 00</span></div>
-<div class="cyan" style="text-align:center">NAME LOCATE</div><br>
-<div class="cyan">LAST NAME . . . <span class="white">${state.cursorPos==='BODY'?state.buffer:''}</span>${state.cursorPos==='BODY'?'<span class="cursor"></span>':''}</div>
-<div class="cyan">KEY TYPE  . . . 1  (0=PERSONAL, 1=BUSINESS)</div>
-<br><div class="white">INGRESE NOMBRE (EJ: VICTORIA) Y PRESIONE ENTER</div>`;
-                } else {
-                    html = `
-<div class="row"><span class="bg-inv">ARNL</span> ( )            <span class="cyan">PAGE 01</span></div>
-<div class="cyan">NAME LOCATE LIST</div><br>
-<div class="cyan">3 SELECT CODE   4 NAME FIELD</div>
-<div class="row">(<span class="white">${state.cursorPos==='BODY'?state.buffer:''}</span>${state.cursorPos==='BODY'?'<span class="cursor"></span>':''}) 01      ${state.client ? state.client.name : 'NO MATCH'}</div>
-<br><div class="white">ESCRIBE 'X' PARA SELECCIONAR</div>`;
-                }
-            }
+        <div id="crm-placeholder" class="crm-content" style="display:none; padding:40px; text-align:center;"><h3>Este flujo aún no ha sido cargado.</h3><p>Selecciona un flujo de la botonera.</p></div>
 
-            // === ARQN (Info Cliente) ===
-            else if (state.subScreen === 'ARQN') {
-                html = `${commonHeader}
-<div class="cyan" style="text-align:center">OWNER INFORMATION</div><br>
-<div class="row">1 CUST NBR  000000000000035   STATUS 0   VIP 0</div><br>
-<div class="row">2 NAME      <span class="white">${cl.name}</span></div>
-<div class="row">3 ADDR      <span class="white">${inf.addr1}</span></div>
-<div class="row">4 ADDR 2    <span class="white">${inf.addr2}</span></div>
-<div class="row">5 CITY      <span class="white">${inf.city}</span></div>
-<div class="row">6 STATE     <span class="white">${inf.state}</span>   7 POSTAL  <span class="white">${inf.zip}</span></div><br>
-<div class="row">9 HOME PHONE <span class="white">${inf.home_phone}</span></div>
-<div class="row">10 MOBILE    <span class="white">${inf.mobile}</span></div>
-<div class="row">  RFC       <span class="white">${inf.rfc}</span>   EMAIL  <span class="white">${inf.email}</span></div>
-<br><div class="cyan footer-nav">PF1=MENU  PF3=ARIQ</div>`;
-            }
+    </div>
+</div>
 
-            // === ARIQ (Multi-Página) ===
-            else if (state.subScreen === 'ARIQ') {
-                let body = '';
-                if (state.page === 1) {
-                    body = `<div class="row">2 <span class="cyan">SHORT NAME</span> <span class="white">${cl.name}</span>   <span class="cyan">ST/PR</span> 225 8 <span class="cyan">STAT</span> ${cl.status}</div><div class="row">  <span class="cyan">CURR BAL</span>                     <span class="white">${cl.curr_bal}</span>   9 <span class="cyan">MEMO:BAL</span>             <span class="white">${cl.curr_bal}</span></div><div class="row">3 <span class="cyan">TOT AMT DUE</span>                   <span class="white">${cl.min_pay}</span>   10 <span class="cyan">PMT DUE DATE</span>      <span class="white">${cl.due_date}</span></div><div class="row">4 <span class="cyan">TOT CR LMT</span>                 <span class="white">${cl.limit}</span>   <span class="cyan">CR LIMIT DT</span>         13/08/2025</div><div class="row">5 <span class="cyan">CASH AVAIL</span>                 <span class="white">${cl.avail}</span>    11 <span class="cyan">BILL CYCLE</span>        ${cl.cut}</div><div class="row">8 <span class="cyan">BLOCK CODE</span>                 <span class="red">${cl.block}</span></div>`;
-                } else if (state.page === 2) {
-                    body = `<div class="row"><span class="cyan">USER CODES:</span>               <span class="cyan">USER DATES:</span>           <span class="cyan">USER AMOUNTS:</span></div><div class="row"><span class="cyan">USER 1</span>                     <span class="cyan">DT ALT PCT</span> 05/07/2017   <span class="cyan">SALDO TOT</span>    <span class="white">${cl.curr_bal}</span></div><div class="row"><span class="cyan">TIPO CLI</span>  01              <span class="cyan">CHGOFF TSY</span>              <span class="cyan">2 ULT ESTADO</span>   <span class="white">${cl.min_pay}</span></div><div class="row"><span class="cyan">3 FAT PAST2</span>    <span class="white">${h.fat_past2}</span></div><div class="row"><span class="cyan">4 FAT PAST1</span>    <span class="white">${h.fat_past1}</span></div><div class="row"><span class="cyan">5 FAT ACTUAL</span>   <span class="white">${h.fat_act}</span></div>`;
-                } else if (state.page === 4) {
-                    body = `<div class="row">1 <span class="cyan">DATE OPENED</span>              <span class="white">${h.open_date}</span>   <span class="cyan">DATE CLOSED</span>         --/--/----</div><div class="row">2 <span class="cyan">DATE LAST PMT</span>            <span class="white">${h.last_pmt}</span></div><div class="row">3 <span class="cyan">DATE LAST PUR</span>            <span class="white">${h.last_pur}</span></div>`;
-                } else if (state.page === 5) {
-                    body = `<div class="row">1 <span class="cyan">DELQ DAYS CTA</span>            ${h.bucket_1}              <span class="cyan">DELINQUENCY AMOUNT</span></div><div class="row">2 <span class="cyan">24 MONTH PROFILE</span></div><div class="row">  ( 01-06 ) <span class="white">${h.profile ? h.profile.substring(0,6) : '000000'}</span></div><div class="row">  ( 07-12 ) <span class="white">${h.profile ? h.profile.substring(6,12) : '000000'}</span></div><div class="row">  <span class="cyan">APP SCR</span> ${h.score}</div>`;
-                }
-                html = `${commonHeader}<div class="cyan" style="text-align:center">ACCOUNT INQUIRY</div>${body}<br><div class="cyan footer-nav">PF1=MENU  PF3=BACK  (ENTER) NEXT PAGE</div>`;
-            }
+<script type="module">
+    // -----------------------------------------------------------
+    // CONFIGURACIÓN FIREBASE
+    // -----------------------------------------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-            // === OTROS MODULOS (Sin cambios mayores) ===
-            else if (state.subScreen === 'ASMW') { const act = state.cursorPos==='ACTION' ? state.buffer : state.tempData.action; const note = state.cursorPos==='NOTE' ? state.buffer : state.tempData.note;
-                html = `${commonHeader}<div class="cyan" style="text-align:center">ACCOUNT WORK</div><br><div class="row">1 ACTION CODE</div><div class="row">  ( <span class="white">${act}</span>${state.cursorPos==='ACTION'?'<span class="cursor"></span>':''} )  <span class="cyan">EJ: IMPE</span></div><br><div class="row">1 NOTE (5-60 CHARS)</div><div class="row">  ( <span class="white">${note}</span>${state.cursorPos==='NOTE'?'<span class="cursor"></span>':''} )</div><br><br><div class="white">STATUS: ${state.msg || 'READY FOR INPUT'}</div>`; }
-            else if (state.subScreen === 'ASHI') { let rows = cl.memos.length ? cl.memos.map(m => `<div class="row white">${m.date} ${m.time}  USER:${m.user}  ACT:${m.action}</div><div class="row green">  ${m.msg}</div><br>`).join('') : `<div class="row yellow">  NO CONTACT HISTORY AVAILABLE</div>`;
-                html = `${commonHeader}<div class="cyan" style="text-align:center">CONTACT HISTORY</div><br>${rows}`; }
-            else if (state.subScreen === 'ARIC') { let rows = cl.related.length ? cl.related.map((r, idx) => { const isSelected = state.cursorPos === 'ROW_X' && state.rowIndex === idx; const marker = isSelected ? (state.buffer || '_') : ' '; const cursorHtml = isSelected ? '<span class="cursor"></span>' : ''; return `<div class="row"> (<span class="white">${marker}</span>${cursorHtml})  <span class="white">${r.org}</span>   <span class="white">${r.brand}</span>   <span class="white">${r.acct}</span></div>`; }).join('') : `<div class="row yellow">  NO RELATED ACCOUNTS FOUND</div>`;
-                html = `${commonHeader}<div class="cyan" style="text-align:center">CUSTOMER RELATED ACCOUNTS</div><br><div class="row cyan"> SEL  ORG   BRAND        ACCOUNT</div><div class="row"> ( )  <span class="white">${cl.org.substring(0,3)}</span>   CURRENT      ${cl.acct}</div>${rows}<br><div class="white">USE (X) TO SELECT ACCOUNT</div>`;
-            }
-            else if (state.subScreen === 'ARTD') { html = `${commonHeader}<div class="cyan">TRANSACCIONES (SIMULADO)</div><br><div class="row white">30/10  1103  67.54 D822  INC PROMOCION</div>`; }
-            else if (state.subScreen === 'ARQE') { html = `${commonHeader}<div class="cyan">EMBOSSING</div><br><div class="row">CARD: ${cl.cards[0] ? cl.cards[0].num : 'NONE'}</div><div class="row">BLOCK: ${cl.cards[0] ? cl.cards[0].block : ''}</div>`; }
-            else if (state.subScreen === 'OFAA') { let rows = cl.auths.length ? cl.auths.map(a => `<div class="row red">${a.date}  ${a.amt}  ${a.resp}  ${a.rsn}</div>`).join('') : '<div class="row green">NO RECENT DECLINES</div>';
-                html = `${commonHeader}<div class="cyan">AUTHS</div><br>${rows}`; }
-            else if (state.subScreen === 'ARDQ') { let rows = cl.insurance.length ? cl.insurance.map(i => `<div class="row white">${i.type} - ${i.status}</div>`).join('') : '<div class="row yellow">NO INSURANCE</div>'; html = `${commonHeader}<div class="cyan">INSURANCE</div><br>${rows}`;
-            }
-            else { html = `${commonHeader}<div class="row green">PANTALLA ${state.subScreen} ACTIVA (SIMULADA)</div>`; }
-        }
-
-        display.innerHTML = html;
-        document.getElementById('trap').focus();
+    // Credenciales extraídas de tu imagen image_c6acda.png
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3u2oa5EZ3l37dVkzYAG75aumn4PHlJfk",
+        authDomain: "banamex-772ea.firebaseapp.com",
+        projectId: "banamex-772ea",
+        storageBucket: "banamex-772ea.firebasestorage.app",
+        messagingSenderId: "1040835829601",
+        appId: "1:1040835829601:web:4422a8f359d9c85dc3af20",
+        measurementId: "G-Q66VLWPKJE"
     };
 
-    // ==========================================
-    // 4. CONTROLLER (LOGIC)
-    // ==========================================
-    const processCommand = () => {
-        const cmd = state.buffer.toUpperCase().trim();
-        state.msg = '';
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        if (state.screen === 'LOGIN') { if (cmd === 'CICSMPT1') { state.screen = 'SIGNON'; state.cursorPos = 'USER';
-        } else state.msg = 'INVALID TRANSACTION ID'; }
-        else if (state.screen === 'SIGNON') { if (state.cursorPos === 'USER') state.cursorPos = 'PASS';
-        else if (state.cursorPos === 'PASS') { if (cmd === 'BRADES1') { state.screen = 'ASRS'; state.cursorPos = 'TOP';
-        } else state.msg = 'INVALID PASSWORD'; } }
-        else if (state.screen === 'ASRS') { if (state.cursorPos === 'TOP' && cmd === '') state.cursorPos = 'BODY';
-        else if (state.cursorPos === 'BODY') { if (cmd === 'A') { state.userActivated = true; state.screen = 'MENU'; state.cursorPos = 'TOP';
-        state.msg = 'USER ACTIVATED'; } else state.msg = 'ENTER "A" TO ACTIVATE'; } }
-        else if (state.cursorPos === 'TOP') {
-            const map = { 
-                'ARIQ':'ARIQ', 'ARTD':'ARTD', 'ARTI':'ARTI', 'ARNL':'ARNL', 
-                'ASMU':'MENU', 'MENU':'MENU', 'ASRS':'ASRS', 'ASMW':'ASMW', 'ASHI':'ASHI', 'ARPH':'ARPH',
-                'ARQB':'ARQB', 'ARDQ':'ARDQ', 'ARQE':'ARQE', 'ARIC':'ARIC', 'OFAA':'OFAA', 'ARSD':'ARSD', 'ARQN':'ARQN' 
-            };
-            if (map[cmd]) {
-                if (cmd === 'MENU' || cmd === 'ASMU') { state.screen = 'MENU'; }
-                else {
-                    if (cmd === 'ARNL') {
-                        state.screen = 'APP';
-                        state.subScreen = 'ARNL';
-                        state.page = 0;
-                        state.client = null;
-                        state.cursorPos = 'BODY';
-                    } else if (!state.client) { 
-                        state.msg = 'OPERATIONAL ERROR: NO CLIENT SELECTED (USE ARNL)';
-                    } else {
-                        state.screen = 'APP';
-                        state.subScreen = map[cmd]; state.tempData = { action: '', note: '' }; state.rowIndex = 0; state.page = 1;
-                        if (cmd === 'ASMW') state.cursorPos = 'ACTION';
-                        else if (cmd === 'ARIC' && state.client.related.length > 0) state.cursorPos = 'ROW_X';
-                        else if (cmd === 'ARSD') state.cursorPos = 'STMT_LIST'; 
-                    }
-                }
-            } else if (cmd === '') {
-                 if (state.subScreen === 'ARIQ') {
-                     if(state.page === 1) state.page = 2;
-                     else if(state.page === 2) state.page = 4; else if(state.page === 4) state.page = 5; else state.page = 1;
-                 }
-                 else if (state.subScreen === 'ARIC') { state.rowIndex++;
-                 if (state.rowIndex >= state.client.related.length) state.rowIndex = 0; }
-                 else if (state.subScreen === 'ARSD' && state.page === 1) { state.rowIndex++;
-                 if (state.rowIndex >= state.client.statements.length) state.rowIndex = 0; }
-            } else { state.msg = 'INVALID COMMAND'; }
+    let currentAgentID = "";
+    let historialInteracciones = JSON.parse(localStorage.getItem('crm_pentafon_db')) || [];
+
+    // --- LOGIN ---
+    window.iniciarSesion = function() {
+        const id = document.getElementById('empleado-id').value;
+        if(id.trim() === "") {
+            document.getElementById('login-error').style.display = 'block';
+            return;
+        }
+        currentAgentID = id;
+        document.getElementById('display-agente').innerText = "Agente: " + id;
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+    }
+
+    // --- NAVEGACION ---
+    window.cargarCRM = function(id) {
+        document.querySelectorAll('.btn-nav').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        document.querySelectorAll('.crm-content').forEach(div => div.style.display = 'none');
+        const map = {'enrolamiento':'crm-enrolamiento','ppp-dep':'crm-ppp-dep','ppt-trab':'crm-ppt-trab','notiafo':'crm-notiafo','portal':'crm-portal','confout':'crm-confout'};
+        if(map[id]) document.getElementById(map[id]).style.display = 'block';
+        else document.getElementById('crm-placeholder').style.display = 'block';
+    }
+
+    // --- ENROLAMIENTO ---
+    window.nextStepEnr = function(paso, val) {
+        if(paso===1) { if(val) {reveal('enr-step2');hide('enr-msg-1-no');hide('enr-btn-tip-1');} else {show('enr-msg-1-no');show('enr-btn-tip-1');hide('enr-step2');} }
+        if(paso===2) { if(val==='si') show('enr-msg-privacy'); else hide('enr-msg-privacy'); reveal('enr-step3'); }
+        if(paso===3) { if(val) {reveal('enr-step4');hide('enr-opciones-container');} else {show('enr-opciones-container');hide('enr-step4');} }
+        if(paso===5) { if(val===true) {hide('enr-huellas-no');reveal('enr-step6');} else if(val===false) {show('enr-huellas-no');hide('enr-step6');} else {reveal('enr-step6');} }
+    }
+    window.validarDatosEnr = function(){ const n=getVal('enr-val-nombre'),t=getVal('enr-val-tel'),c=getVal('enr-val-curp'); if(n==="CORRECTO"||t==="CORRECTO"||c==="CORRECTO"){hide('enr-error-val');reveal('enr-step5');}else show('enr-error-val'); }
+
+    // --- PPP ---
+    window.nextStepPpp = function(paso, val) {
+        if(paso===1) { if(val) {reveal('ppp-step2');hide('ppp-msg-1-no');hide('ppp-btn-tip-1');} else {show('ppp-msg-1-no');show('ppp-btn-tip-1');hide('ppp-step2');} }
+        if(paso===2) { if(val) {reveal('ppp-step3');hide('ppp-step2-no');} else {reveal('ppp-step2-no');hide('ppp-step3');} }
+        if(paso===3) reveal('ppp-step4');
+        if(paso===4) reveal('ppp-step5');
+    }
+
+    // --- PPT ---
+    window.nextStepPptTrab = function(paso, val) {
+        if(paso===1) {
+            if(val===true) { show('ppt-box-red');show('ppt-btn-next-1');hide('ppt-box-yellow-no'); }
+            else if(val===false) { show('ppt-box-red');show('ppt-box-yellow-no');hide('ppt-btn-next-1');irATipificacion('ppt'); }
+            else { reveal('ppt-step2'); }
+        }
+        if(paso===2) { if(val) {reveal('ppt-step3');hide('ppt-step2-no');} else {reveal('ppt-step2-no');hide('ppt-step3');} }
+        if(paso===3) reveal('ppt-step4');
+        if(paso===4) { if(val===true) show('ppt-monto-container'); else hide('ppt-monto-container'); if(val==='continuar') reveal('ppt-step5'); }
+        if(paso===5) reveal('ppt-step6');
+    }
+
+    // --- NOTIAFO ---
+    window.nextStepNotiafo = function(paso, val) {
+        if(paso===1) { if(val===true) {show('not-red-alert');show('not-btn-cont-1');hide('not-step1-no');} else if(val===false) {show('not-red-alert');hide('not-btn-cont-1');show('not-step1-no');} else reveal('not-step2'); }
+        if(paso===2) { if(val===true) {reveal('not-step3');hide('not-step2-obj');} else {reveal('not-step2-obj');hide('not-step3');} }
+        if(paso==='2b') { if(val===true) reveal('not-step3'); else {reveal('not-step4');hide('not-step3');} }
+        if(paso===3) reveal('not-step4');
+    }
+
+    // --- PORTAL ---
+    window.nextStepPortal = function(paso, val) {
+        if(paso===1) { if(val===true) {show('por-red-alert');show('por-btn-cont-1');hide('por-step1-no');} else if(val===false) {show('por-red-alert');hide('por-btn-cont-1');show('por-step1-no');} else reveal('por-step2'); }
+        if(paso===2) { if(val===true) reveal('por-step3'); else reveal('por-step-end'); }
+        if(paso===3) { if(val===true) reveal('por-step4'); else reveal('por-step-end'); }
+        if(paso===4) { if(val==='sucursal') {reveal('por-step-sucursal');hide('por-step-visita');} if(val==='visita') {reveal('por-step-visita');hide('por-step-sucursal');} }
+        if(paso==='sucursal'||paso==='visita') reveal('por-step-end');
+    }
+
+    // --- OUT ---
+    window.nextStepOut = function(paso, val) {
+        if(paso===1) { if(val===true) {reveal('out-step2');hide('out-conocido-panel');hide('out-no-conoce-msg');hide('out-conoce-agenda');} else show('out-conocido-panel'); }
+        if(paso===2) { if(val===true) {reveal('out-step3');hide('out-no-tiempo-panel');} else show('out-no-tiempo-panel'); }
+        if(paso===3) reveal('out-step-end');
+    }
+    window.manejarConocido = function(conoce) { if(conoce) {hide('out-no-conoce-msg');show('out-conoce-agenda');} else {hide('out-conoce-agenda');show('out-no-conoce-msg');} }
+
+    // --- COMMON ---
+    window.irATipificacion = function(flujo) { const m={'enr':'enr-step7','ppp':'ppp-step-tip','ppt':'ppt-step7','not':'not-step-tip','por':'por-step-tip','out':'out-step-tip'}; if(m[flujo]) reveal(m[flujo]); }
+    window.verificarAgenda = function(flujo) { const s=document.getElementById(flujo+'-tipif').value,p=document.getElementById(flujo+'-agenda'); if(p) p.style.display=s.includes("MED")?'block':'none'; }
+    
+    // --- GUARDAR (FIREBASE + LOCAL) ---
+    window.guardarInteraccion = async function(nf) {
+        let pf=''; if(nf.includes('Enrolamiento')) pf='enr'; if(nf.includes('PPP')) pf='ppp'; if(nf.includes('PPT')) pf='ppt'; if(nf.includes('NOTIAFO')) pf='not'; if(nf.includes('Portal')) pf='por'; if(nf.includes('OUT')||nf.includes('Agenda')) pf='out';
+        
+        // Objeto Base
+        let reg = { 
+            "Agente": currentAgentID,
+            "Fecha": new Date().toLocaleDateString(), 
+            "Hora": new Date().toLocaleTimeString(), 
+            "Flujo": nf 
+        };
+
+        // Lógica Agenda Directa
+        if(nf.includes('Agenda')) {
+            reg["Calificación"] = "N/A"; 
+            reg["Tipificación"] = "MED - Agendado en llamada"; 
+            reg["Cita Fecha"] = document.getElementById(pf+'-date-conoce').value||document.getElementById(pf+'-date-step2').value;
+            reg["Cita Hora"] = document.getElementById(pf+'-time-conoce').value||document.getElementById(pf+'-time-step2').value;
+        } else {
+            reg["Calificación"] = document.getElementById(pf+'-calif').value;
+            reg["Tipificación"] = document.getElementById(pf+'-tipif').value;
+            reg["Comentarios"] = document.getElementById(pf+'-coment').value;
+            const d=document.getElementById(pf+'-date'); if(d) reg["Cita Fecha"]=d.value;
+            const t=document.getElementById(pf+'-time'); if(t) reg["Cita Hora"]=t.value;
+        }
+
+        // Guardar en LocalStorage (Backup)
+        historialInteracciones.push(reg);
+        localStorage.setItem('crm_pentafon_db', JSON.stringify(historialInteracciones));
+
+        // Guardar en Firebase
+        try {
+            await addDoc(collection(db, "registros"), reg);
+            alert("✅ Guardado en Base de Datos");
+        } catch (e) {
+            console.error("Error al guardar en Firebase: ", e);
+            alert("⚠️ Guardado localmente (Error de conexión)");
         }
         
-        // --- LOGICA INTERNA DE PANTALLAS ---
-        else if (state.subScreen === 'ARNL') {
-            if (state.page === 0) { 
-                const foundKey = Object.keys(DB).find(k => cmd.includes(k));
-                if (foundKey) { 
-                    state.client = DB[foundKey];
-                    state.page = 1; 
-                    state.cursorPos = 'BODY';
-                } else state.msg = 'CLIENTE NO ENCONTRADO';
-            } else if (state.page === 1 && cmd === 'X') {
-                state.msg = `CLIENTE CARGADO OK`;
-                state.cursorPos = 'TOP'; 
-            }
-        }
-        else if (state.subScreen === 'ASMW') { if (state.cursorPos === 'ACTION') { state.tempData.action = cmd;
-        state.cursorPos = 'NOTE'; } else if (state.cursorPos === 'NOTE') { state.client.memos.unshift({ date: new Date().toLocaleDateString('en-GB'), time: new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit'}), user: 'TRAINEE', action: state.tempData.action, msg: cmd });
-        state.msg = 'COMMENT SAVED'; state.cursorPos = 'TOP'; } }
-        else if (state.subScreen === 'ARIC' && state.cursorPos === 'ROW_X') { if (cmd === 'X') { const target = state.client.related[state.rowIndex];
-        if (target && DB[target.refKey]) { state.client = DB[target.refKey]; state.msg = 'CONTEXT SWITCHED'; state.cursorPos = 'TOP'; } } }
-        
-        else if (state.subScreen === 'ARSD' && state.cursorPos === 'STMT_LIST') {
-            if (cmd === 'X') {
-                state.selectedStmt = state.client.statements[state.rowIndex];
-                state.page = 2; 
-                state.cursorPos = 'TOP';
-            }
-        }
+        location.reload();
+    }
 
-        state.buffer = '';
-        render();
-    };
+    window.descargarExcel = function() {
+        if(historialInteracciones.length===0){alert("Sin datos");return;}
+        const ws=XLSX.utils.json_to_sheet(historialInteracciones);
+        const wb=XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb,ws,"Reporte");
+        XLSX.writeFile(wb,"Reporte_Afore.xlsx");
+    }
 
-    document.addEventListener('keydown', (e) => {
-        const key = e.key;
-        if (key.startsWith('F') && key.length > 1) {
-            e.preventDefault();
-            if (key === 'F1') { state.screen = 'MENU'; state.cursorPos = 'TOP'; }
-            if (key === 'F3') { 
-                if (state.subScreen === 'ARSD' && state.page === 2) { state.page = 1; state.cursorPos = 'STMT_LIST'; } 
-                else state.cursorPos = 'TOP'; 
-            }
-            state.buffer = ''; render(); return;
-        }
-        if (key === 'Enter') processCommand();
-        else if (key === 'Backspace') { state.buffer = state.buffer.slice(0, -1); render(); }
-        else if (key.length === 1 && !e.ctrlKey) { state.buffer += key.toUpperCase(); render(); }
-        document.getElementById('trap').focus();
-    });
-    render();
+    // UTILS
+    function show(id){document.getElementById(id).style.display='block';}
+    function hide(id){document.getElementById(id).style.display='none';}
+    function reveal(id){document.getElementById(id).classList.add('visible');document.getElementById(id).style.display='block';document.getElementById(id).scrollIntoView({behavior:"smooth"});}
+    function getVal(id){return document.getElementById(id).value;}
+
+    // Init
+    document.getElementById('crm-enrolamiento').style.display='block';
+    if(document.getElementById('enr-step1')) document.getElementById('enr-step1').classList.add('visible');
 </script>
 </body>
 </html>
